@@ -452,6 +452,7 @@ class Component extends DCLogic {
     this.N = { odc1: 'A', odc2: 'B', odc3: 'C', odc4: 'H', clsD: 'D', clsE: 'E', clsF: 'F', clsG: 'G' };
     this.NEED = { present: 5, absent: 3, neg: 5 };
     this.WINDOW = 5;
+    this.UPLOAD = 10;
     this.CL = {
       odc1: { fg: '#A3133F', bg: '#FCE4EC', bd: '#F0A3BA', box: '#E0457B' },
       odc2: { fg: '#17713A', bg: '#E3F6E8', bd: '#97D5A9', box: '#16A35F' },
@@ -634,13 +635,13 @@ class Component extends DCLogic {
   newDataset(s, fid, slot) {
     const n = s.seq++; const id = 'd' + n;
     s.datasets.push({ id: id, folder: fid, slot: slot, name: 'upload-' + n });
-    for (let i = 1; i <= 4; i++) s.images.push({ id: id + '-' + i, ds: id, name: 'IMG_' + n + '0' + i + '.png', saved: false, boxes: [] });
+    for (let i = 1; i <= this.UPLOAD; i++) s.images.push({ id: id + '-' + i, ds: id, name: 'IMG_' + n + String(i).padStart(2, '0') + '.png', saved: false, boxes: [] });
     return id;
   }
   addDataset(fid, slot) {
     let name = '';
     this.mut(s => { this.newDataset(s, fid, slot); s.exp[fid] = true; s.expSlot[fid + '|' + slot] = true; name = this.fname(s.folders.find(f => f.id === fid)); });
-    this.say("4 images uploaded to '" + name + "' · " + this.SLOTS[slot]);
+    this.say(this.UPLOAD + " images uploaded to '" + name + "' · " + this.SLOTS[slot]);
   }
   openDs(dsId) {
     this.mut(s => {
