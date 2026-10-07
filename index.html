@@ -171,10 +171,9 @@ a{color:#D63F00}a:hover{color:#A83200}
 </div>
 <div style="display: flex; align-items: center; gap: 12px">
 <sc-if value="{{anyRunning}}" hint-placeholder-val="{{false}}"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #C23A00; font-weight: 600"><span class="spin"></span>{{runningText}}</span></sc-if>
-<button onClick="{{openModal}}" style="height: 40px; padding: 0 10px 0 16px; background: #FF4A00; color: #FFFFFF; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 10px; cursor: pointer">
+<button onClick="{{openModal}}" style="height: 40px; padding: 0 16px; background: #FF4A00; color: #FFFFFF; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 10px; cursor: pointer">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"></path></svg>
 Run Recommender
-<span style="border-radius: 999px; padding: 2px 9px; font-size: 12px; {{readyPillStyle}}">{{readyText}}</span>
 </button>
 </div>
 </div>
