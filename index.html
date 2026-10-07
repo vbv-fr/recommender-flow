@@ -1209,7 +1209,6 @@ class Component extends DCLogic {
         cbClass: 'fv-cb' + (on ? ' on' : ''), tipClass: 'fv-tip' + (why ? ' off' : ''), cbLabel: 'Select ' + m.name + ' (' + m.capture + ')',
         toggle: () => this.setTrain(x => { x.selErr = false; x.sel = on ? x.sel.filter(i => i !== m.id) : x.sel.concat([m.id]); }),
         classes: m.classes.map(c => ({ name: this.N[c], style: this.clsChipStyle(this.N[c], false), title: '' }))
-          .concat(m.neg.map(c => ({ name: this.N[c] + ' · negative', style: this.clsChipStyle(this.N[c], true), title: 'Negative class' })))
       };
     });
     v.tBack2 = () => this.setTrain(x => { x.sel = []; x.step = 1; });

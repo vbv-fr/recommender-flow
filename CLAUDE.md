@@ -52,7 +52,7 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
 **AI Model Training (prototype control).** Replica of frinksvision-frontend `src/modules/project/ai-training-new` (model list page + `BuildNTrainDrawer`: Outfit font, #ff4301, 5-step timeline, step 1 Model Name with Module Type/prefixed name/description + the real validation messages, step 2 Modules & Classes table: checkbox | Variant | Capture | Module | Model Type | Search Area | Classes; ClassChip colours use the same hash→HSL as `ClassChip.tsx`). Only "Object Detection & Classification" lists modules:
 - capture 3 · ODC-1: D, E, F
 - capture 4 · ODC-2: F
-- capture 4 · ODC-3: E, G, with F as a NEGATIVE class (dashed "F · negative" chip)
+- capture 4 · ODC-3: E, G, with F as a NEGATIVE class (not shown as a chip; it only drives the conflict rule)
 - Rule: one training job can't hold a class as both normal and negative. Selecting ODC-1/ODC-2 greys out ODC-3 and vice versa; the greyed checkbox shows a hover tooltip (real Tooltip styling) naming the class and the conflicting module(s). Steps 3–5 are not built; Next on step 2 shows a toast.
 
 **Prototype controls bar:** Fill capture 5 to ready, AI Model Training (and Datasets & Annotations to return), Auto-label this image, Reset.
