@@ -22,7 +22,8 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
    - It appears ONLY on the first 5 images in folders CONTAINING the negative class.
    - It draws a dotted box.
    - A negative class is never offered as a normal class chip.
-6. **Chip states.** Each chip shows n/target. n counts saved labels plus unsaved boxes on the current image.
+6. **Counter info icon.** Each absent/negative chip (with its n/target counter) has an ⓘ next to it; hover shows "Minimum 3 (absent) / 5 (negative) instances of this class need to be mapped for Data Recommender to run for this capture".
+7. **Chip states.** Each chip shows n/target. n counts saved labels plus unsaved boxes on the current image.
    - Below target: orange dot and class-coloured border.
    - At target: grey, but still visible and usable.
 7. **Absent and negative labels are recommender-only.**
