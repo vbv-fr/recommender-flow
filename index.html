@@ -7,7 +7,7 @@
 <meta name="description" content="Clickable prototype: recipe flow ending at Dataset Folders, recommender-only absent and negative labels on Datasets &amp; Annotations, and the Run Recommender popup.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23FF4A00'/%3E%3Cpath d='M9 22l5-6 4 4 5-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#fff}
 *{box-sizing:border-box}
@@ -27,6 +27,31 @@ a{color:#D63F00}a:hover{color:#A83200}
 .tipbox{display:none;position:absolute;bottom:calc(100% + 8px);right:-8px;width:240px;background:#18181B;color:#fff;font-size:12px;font-weight:500;line-height:1.4;padding:8px 10px;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.2);z-index:5}
 .tip:hover .tipbox,.tip:focus .tipbox{display:block}
 .qr{background-color:#fff;background-image:repeating-linear-gradient(0deg,#1f1f1f 0 4px,transparent 4px 9px),repeating-linear-gradient(90deg,#1f1f1f 0 4px,transparent 4px 10px)}
+
+/* AI Model Training: replica of frinksvision-frontend ai-training-new (Tailwind classes translated) */
+.fv{font-family:'Outfit',sans-serif;color:#000;font-weight:400}
+.fv-btn{font-family:inherit;font-weight:600;font-size:14px;line-height:20px;padding:8px 24px;border-radius:6px;border:1px solid transparent;background:#ff4301;color:#fff;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.fv-btn:hover{background:rgba(255,67,1,.9)}
+.fv-btn.border{background:transparent;border-color:#ff4301;color:#ff4301}
+.fv-btn.border:hover{opacity:.7}
+.fv-btn:disabled{background:#E5E7EB;color:#6B7280;cursor:not-allowed}
+.fv-filter{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#111827;cursor:pointer}
+.fv-th{position:relative;padding:16px 8px;text-align:center;font-size:16px;font-weight:500;color:#fff}
+.fv-th:not(:last-child)::after{content:'';position:absolute;top:10px;right:0;bottom:10px;width:2px;border-radius:16px;background:#fff}
+.fv-row{display:grid;border-top:1px solid #E5E7EB;background:#fff;cursor:pointer}
+.fv-row:hover{background:#F3F4F6}
+.fv-td{padding:8px;display:flex;align-items:center;justify-content:center;text-align:center;color:#000;min-width:0}
+.fv-cb{width:24px;height:24px;border:1px solid #D9D9D9;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;cursor:pointer;box-shadow:0 1px 3px 0 #7A7E80,0 1px 2px -1px #7A7E80;padding:0}
+.fv-cb.on{background:#ff4301}
+.fv-cb:disabled{box-shadow:none;background:#E5E7EB;pointer-events:none}
+.fv-tip.off{cursor:not-allowed}
+.fv-tip{position:relative;display:inline-flex;align-items:center}
+.fv-tipbox{display:none;position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);z-index:50;width:max-content;max-width:400px;white-space:normal;text-align:left;border:1px solid #D1D5DB;background:#F3F4F6;color:#4B5563;font-size:12px;line-height:16px;padding:4px 8px;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.05);pointer-events:none}
+.fv-tip:hover .fv-tipbox{display:block}
+.fv-chip{display:inline-flex;padding:2px 8px;font-size:14px;border-radius:12px;color:#000;background:#FACFCE;white-space:nowrap}
+.fv-cls{display:inline-flex;align-items:center;border-radius:6px;padding:2px 8px;white-space:nowrap;font-size:14px;font-weight:500}
+.fv-input{font-family:inherit;font-size:16px;padding:8px 12px;border-radius:6px;border:1px solid #D1D5DB;background:#fff;width:100%;color:#000}
+.fv-input:focus{outline:2px solid #ff4301;outline-offset:-1px;border-color:#ff4301}
 </style>
 </head>
 <body>
@@ -38,6 +63,8 @@ a{color:#D63F00}a:hover{color:#A83200}
 <span style="font-weight: 700; letter-spacing: 0.06em">PROTOTYPE CONTROLS</span>
 <button class="pbtn" onClick="{{fillReady}}">Fill capture 5 to ready</button>
 <sc-if value="{{isAnnot}}" hint-placeholder-val="{{false}}"><button class="pbtn" onClick="{{autoLabel}}">Auto-label this image</button></sc-if>
+<button class="pbtn" onClick="{{goTraining}}">AI Model Training</button>
+<sc-if value="{{isTraining}}" hint-placeholder-val="{{false}}"><button class="pbtn" onClick="{{goDatasets}}">Datasets &amp; Annotations</button></sc-if>
 <button class="pbtn" onClick="{{reset}}">Reset</button>
 <span>Recommender runs take {{runSecs}} s here (real runs take a few minutes)</span>
 </div>
@@ -268,6 +295,115 @@ Run Recommender
 </div>
 </sc-if>
 
+<sc-if value="{{isTraining}}" hint-placeholder-val="{{false}}">
+<div class="fv" style="min-height: 860px; display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 8px">
+<div style="display: flex; gap: 32px; align-self: flex-end; padding-bottom: 4px">
+<span class="fv-filter">Model Type <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"></path></svg></span>
+<span class="fv-filter">Classes Present <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"></path></svg></span>
+<span class="fv-filter">Is Archived <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"></path></svg></span>
+</div>
+<button class="fv-btn" onClick="{{openTrain}}">+ Train AI Model</button>
+</div>
+<div style="padding: 0 20px 20px">
+<div style="border-bottom: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1); overflow: hidden">
+<div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)) 100px; background: #ff4301">
+<div class="fv-th">Model Name</div><div class="fv-th">Date Created</div><div class="fv-th">Model Type</div><div class="fv-th">Training Data</div><div class="fv-th">Training Status</div><div class="fv-th">Last Updated at</div><div class="fv-th">Time</div><div class="fv-th">Classes</div><div class="fv-th">Actions</div>
+</div>
+<div class="fv-row" style="grid-template-columns: repeat(8, minmax(0, 1fr)) 100px">
+<div class="fv-td">ODC_line_v1</div><div class="fv-td">22/09/2026</div><div class="fv-td">Object Detection</div><div class="fv-td">420</div><div class="fv-td" style="color: #16A34A">Completed</div><div class="fv-td">23/09/2026</div><div class="fv-td">2h 14m</div><div class="fv-td"><span class="fv-cls" style="{{chipD}}">D</span></div><div class="fv-td">⋮</div>
+</div>
+</div>
+</div>
+</div>
+
+<sc-if value="{{trainOpen}}" hint-placeholder-val="{{false}}">
+<div class="fv" onClick="{{closeTrain}}" style="position: fixed; inset: 0; z-index: 50; background: #00000020">
+<div onClick="{{stop}}" style="position: absolute; top: 0; right: 0; bottom: 0; max-width: 100vw; display: flex; flex-direction: column; background: #fff">
+<div style="display: flex; align-items: center; justify-content: space-between; border: 1px solid #E3E5E5; padding: 12px; font-size: 16px; font-weight: 600">
+<div>Train AI Model</div>
+<div style="cursor: pointer" onClick="{{closeTrain}}">X</div>
+</div>
+<div style="display: flex; flex: 1; min-height: 0">
+<div style="padding: 20px 40px; height: fit-content">
+<div style="position: relative; display: flex; flex-direction: column; gap: 80px">
+<div style="position: absolute; left: 10px; top: 0; height: 100%; width: 2px; background: #E5E7EB"><div style="width: 100%; background: #ff4301; {{tlFill}}"></div></div>
+<sc-for list="{{tlSteps}}" as="t">
+<div style="position: relative; z-index: 20; display: flex; align-items: center; gap: 16px; background: #fff; padding: 16px 0">
+<div style="display: flex; width: 24px; height: 24px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-weight: 700; font-size: 13px; {{t.dot}}">{{t.tick}}</div>
+<span style="{{t.label}}">{{t.name}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="height: 100%; overflow-y: auto; border-left: 1px solid #D1D5DB; padding: 24px">
+<div style="display: flex; height: 100%; flex-direction: column; justify-content: space-between">
+
+<sc-if value="{{tStep1}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; height: 80vh; width: min(960px, calc(100vw - 330px)); min-width: 280px; flex-direction: column; gap: 16px; overflow: auto">
+<div style="font-size: 28px; font-weight: 700">Model Name</div>
+<div style="font-size: 16px">Provide a name for this AI Model which will be trained for this project. This AI model will run on the instance to inspect the product as per the configurations chosen in this flow &amp; their setup done in the configurations flow. You can train multiple AI models for this project depending upon complexity.</div>
+<div style="font-size: 16px">Reach out to Frinks AI technical support team to assist you in this process if required.</div>
+<div style="display: flex; flex-direction: column; gap: 12px; border-radius: 8px; background: #fadbce; padding: 16px">
+<div style="font-size: 16px; font-weight: 600">Module Type <span style="color: #EF4444"> *</span></div>
+<select class="fv-input" value="{{tModule}}" onChange="{{tPickModule}}" style="cursor: pointer">
+<option value="">Select a Module</option>
+<sc-for list="{{tModules}}" as="m"><option value="{{m.id}}">{{m.name}}</option></sc-for>
+</select>
+<sc-if value="{{tModuleErr}}" hint-placeholder-val="{{false}}"><p style="margin: 0 0 0 4px; font-size: 12px; color: #EF4444">Please select a module.</p></sc-if>
+<sc-if value="{{tModule}}" hint-placeholder-val="{{false}}">
+<div style="font-size: 16px; font-weight: 600">Model Name<span style="color: #EF4444"> *</span></div>
+<input class="fv-input" type="text" placeholder="Enter model name" value="{{tName}}" onInput="{{tSetName}}">
+<sc-if value="{{tNameErr}}" hint-placeholder-val="{{false}}"><p style="margin: 0 0 0 4px; font-size: 12px; color: #EF4444">{{tNameErr}}</p></sc-if>
+<div style="font-size: 16px; font-weight: 600">Model Description <span style="color: #EF4444"> *</span></div>
+<textarea class="fv-input" placeholder="Enter model description" value="{{tDesc}}" onInput="{{tSetDesc}}"></textarea>
+<sc-if value="{{tDescErr}}" hint-placeholder-val="{{false}}"><p style="margin: 0 0 0 4px; font-size: 12px; color: #EF4444">{{tDescErr}}</p></sc-if>
+</sc-if>
+</div>
+</div>
+<div style="display: flex; justify-content: space-between; padding-top: 16px">
+<div style="display: flex; align-items: center; gap: 8px"><button class="fv-btn" disabled="{{true}}">Back</button><button class="fv-btn" onClick="{{tNext1}}">Next</button></div>
+<button class="fv-btn border" onClick="{{closeTrain}}">Cancel</button>
+</div>
+</sc-if>
+
+<sc-if value="{{tStep2}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; height: 80vh; width: min(960px, calc(100vw - 330px)); min-width: 280px; flex-direction: column; gap: 16px; overflow: auto">
+<div style="font-size: 24px; font-weight: 700">Modules &amp; Classes</div>
+<div style="font-size: 16px">Select the camera configs, modules, and classes you wish to train AI models for.</div>
+<sc-if value="{{tSelErr}}" hint-placeholder-val="{{false}}"><p style="margin: 0 0 0 4px; font-size: 14px; color: #EF4444">Please select atleast 1 config to proceed</p></sc-if>
+<div style="overflow-x: auto; padding-bottom: 60px"><div style="min-width: 900px">
+<div style="display: grid; grid-template-columns: 60px repeat(5, minmax(0, 1fr)) 200px; background: #ff4301; border-bottom: 1px solid #D1D5DB">
+<div class="fv-th"></div><div class="fv-th">Variant</div><div class="fv-th">Capture</div><div class="fv-th">Module</div><div class="fv-th">Model Type</div><div class="fv-th">Search Area</div><div class="fv-th">Classes</div>
+</div>
+<sc-for list="{{tRows}}" as="r">
+<div class="fv-row" style="grid-template-columns: 60px repeat(5, minmax(0, 1fr)) 200px">
+<div class="fv-td"><span class="{{r.tipClass}}"><button class="{{r.cbClass}}" role="checkbox" aria-checked="{{r.ariaChecked}}" aria-label="{{r.cbLabel}}" disabled="{{r.disabled}}" onClick="{{r.toggle}}"><sc-if value="{{r.checked}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 512 512" fill="#fff"><path d="M173.9 439.4l-166.4-166.4c-10-10-10-26.2 0-36.2l36.2-36.2c10-10 26.2-10 36.2 0L192 312.7 432.1 72.6c10-10 26.2-10 36.2 0l36.2 36.2c10 10 10 26.2 0 36.2l-294.4 294.4c-10 10-26.2 10-36.2 0z"></path></svg></sc-if></button><sc-if value="{{r.disabled}}" hint-placeholder-val="{{false}}"><span class="fv-tipbox" role="tooltip">{{r.why}}</span></sc-if></span></div>
+<div class="fv-td">{{r.variant}}</div>
+<div class="fv-td">{{r.capture}}</div>
+<div class="fv-td">{{r.module}}</div>
+<div class="fv-td">Object Detection</div>
+<div class="fv-td"><span class="fv-chip">Input Image</span></div>
+<div class="fv-td" style="justify-content: flex-start; text-align: left"><div style="display: flex; flex-wrap: wrap; gap: 4px"><sc-for list="{{r.classes}}" as="c"><span class="fv-cls" title="{{c.title}}" style="{{c.style}}">{{c.name}}</span></sc-for></div></div>
+</div>
+</sc-for>
+<sc-if value="{{tNoRows}}" hint-placeholder-val="{{false}}"><div style="padding: 24px; text-align: center; color: #6B7280; border-top: 1px solid #E5E7EB">No modules of this type</div></sc-if>
+</div></div>
+</div>
+<div style="display: flex; justify-content: space-between; padding-top: 16px">
+<div style="display: flex; align-items: center; gap: 8px"><button class="fv-btn border" onClick="{{tBack2}}">Back</button><button class="fv-btn" onClick="{{tNext2}}">Next</button></div>
+<button class="fv-btn border" onClick="{{closeTrain}}">Cancel</button>
+</div>
+</sc-if>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+</sc-if>
+
 <sc-if value="{{modal}}" hint-placeholder-val="{{false}}">
 <div style="position: fixed; inset: 0; background: rgba(24, 24, 27, 0.45); display: flex; justify-content: center; align-items: flex-start; padding: 60px 16px; z-index: 20; overflow-y: auto">
 <div role="dialog" aria-modal="true" aria-labelledby="rr-title" style="width: 100%; max-width: 820px; background: #FFFFFF; border-radius: 12px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column">
@@ -453,6 +589,19 @@ class Component extends DCLogic {
     this.NEED = { present: 5, absent: 3, neg: 5 };
     this.WINDOW = 5;
     this.UPLOAD = 10;
+    this.TRAIN_MODULES = [
+      { id: 'm1', variant: 'variant 1', capture: 'capture 3', name: 'ODC-1', classes: ['clsD', 'clsE', 'clsF'], neg: [] },
+      { id: 'm2', variant: 'variant 1', capture: 'capture 4', name: 'ODC-2', classes: ['clsF'], neg: [] },
+      { id: 'm3', variant: 'variant 1', capture: 'capture 4', name: 'ODC-3', classes: ['clsE', 'clsG'], neg: ['clsF'] }
+    ];
+    this.STORE_MODULES = [
+      { id: 'classification', name: 'Image Classification', prefix: 'IC_' },
+      { id: 'ocr-detection', name: 'OCR - Detection', prefix: 'OCR-D_' },
+      { id: 'ocr-recognition', name: 'OCR - Recognition', prefix: 'OCR-R_' },
+      { id: 'segmentation', name: 'Segmentation', prefix: 'SEG_' },
+      { id: 'assembly', name: 'Object Detection & Classification', prefix: 'ODC_' },
+      { id: 'beadInspection', name: 'Bead Inspection', prefix: 'BI_' }
+    ];
     this.CL = {
       odc1: { fg: '#A3133F', bg: '#FCE4EC', bd: '#F0A3BA', box: '#E0457B' },
       odc2: { fg: '#17713A', bg: '#E3F6E8', bd: '#97D5A9', box: '#16A35F' },
@@ -526,6 +675,7 @@ class Component extends DCLogic {
       ],
       exp: { fA: true }, expSlot: { 'fA|0': true },
       cur: null, activeCls: null, drag: null, sel: {}, step: 'select', groups: [], pool: [],
+      train: { open: false, step: 1, module: '', name: '', desc: '', modErr: false, nameErr: '', descErr: '', sel: [], selErr: false },
       wiz: ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3'], seq: 10, special: null
     };
   }
@@ -878,6 +1028,39 @@ class Component extends DCLogic {
   }
   reset() { this.timers.forEach(t => clearTimeout(t)); this.timers = []; this.setState(this.initial()); }
 
+
+  /* ---------- AI Model Training (replica of frinksvision-frontend ai-training-new) ---------- */
+  // ClassChip colour: same hash → HSL(85%, 38%) as shared/components/ClassChip.tsx
+  classColor(name) {
+    let h = 0; const str = 'cls-' + name;
+    for (let i = 0; i < str.length; i++) { h = (h << 5) - h + str.charCodeAt(i); h |= 0; }
+    h ^= h >>> 16; h = Math.imul(h, 0x45d9f3b); h ^= h >>> 16; h = Math.imul(h, 0x45d9f3b); h ^= h >>> 16;
+    const hue = ((h % 360) + 360) % 360, sat = 0.85, l = 0.38;
+    const k = n => (n + hue / 30) % 12, a = sat * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    const hex = x => Math.round(255 * x).toString(16).padStart(2, '0');
+    return '#' + hex(f(0)) + hex(f(8)) + hex(f(4));
+  }
+  clsChipStyle(name, neg) {
+    const c = this.classColor(name);
+    return 'background-color:' + c + '35; color:' + c + '; border:1px ' + (neg ? 'dashed' : 'solid') + ' ' + c + '70;';
+  }
+  goTraining() { this.mut(s => { s.screen = 'training'; s.modal = false; s.train = this.initial().train; }); }
+  goDatasets() { this.mut(s => { s.screen = 'datasets'; s.train.open = false; }); }
+  setTrain(fn) { this.mut(s => fn(s.train)); }
+  // One training job can't hold a class as both normal and negative.
+  trainConflict(t, m) {
+    if (t.sel.indexOf(m.id) >= 0) return '';
+    const hits = [];
+    this.TRAIN_MODULES.filter(x => t.sel.indexOf(x.id) >= 0).forEach(x => {
+      m.classes.forEach(c => { if (x.neg.indexOf(c) >= 0) hits.push({ c: c, as: 'negative', mod: x }); });
+      m.neg.forEach(c => { if (x.classes.indexOf(c) >= 0) hits.push({ c: c, as: 'normal', mod: x }); });
+    });
+    if (!hits.length) return '';
+    const h = hits[0], other = hits.filter(x => x.c === h.c && x.as === h.as).map(x => x.mod.name + ' (' + x.mod.capture + ')').join(' and ');
+    return this.N[h.c] + ' is a ' + h.as + ' class in ' + other + ' but a ' + (h.as === 'negative' ? 'normal' : 'negative') + ' class here. A class can’t be both normal and negative in one training job.';
+  }
+
   /* ---------- view model ---------- */
   countDs(s, dss) {
     let a = 0, t = 0;
@@ -977,6 +1160,60 @@ class Component extends DCLogic {
       runSecs: runSecs, modal: s.modal, hasToast: !!s.toast, toast: s.toast || '',
       fillReady: () => this.fillReady(), autoLabel: () => this.autoLabel(), reset: () => this.reset()
     };
+
+
+    // AI Model Training
+    const t = s.train;
+    v.isTraining = s.screen === 'training';
+    v.goTraining = () => this.goTraining(); v.goDatasets = () => this.goDatasets();
+    v.chipD = this.clsChipStyle('D', false);
+    v.trainOpen = t.open; v.stop = e => e.stopPropagation();
+    v.openTrain = e => { e.stopPropagation(); this.mut(st => { st.train = Object.assign(this.initial().train, { open: true }); }); };
+    v.closeTrain = () => this.setTrain(x => { x.open = false; });
+    const TL = ['Model Name', 'Modules & Classes', 'Datasets', 'Model Configuration', 'Review'];
+    v.tlFill = 'height:' + (100 * (t.step - 1) / (TL.length - 1)) + '%;';
+    v.tlSteps = TL.map((n, i) => ({
+      name: n, tick: t.step > i + 1 ? '✔' : '',
+      dot: t.step >= i + 1 ? 'background:#ff4301;' : 'background:#fff; border:1px solid #E5E7EB;',
+      label: t.step === i + 1 ? 'font-weight:600; color:black;' : 'font-weight:400; color:gray;'
+    }));
+    v.tStep1 = t.step === 1; v.tStep2 = t.step === 2;
+    const pre = (this.STORE_MODULES.find(m => m.id === t.module) || {}).prefix || '';
+    v.tModules = this.STORE_MODULES; v.tModule = t.module; v.tModuleErr = t.modErr;
+    v.tName = t.name; v.tDesc = t.desc; v.tNameErr = t.nameErr; v.tDescErr = t.descErr;
+    v.tPickModule = e => { const id = e.target.value; this.setTrain(x => {
+      const old = (this.STORE_MODULES.find(m => m.id === x.module) || {}).prefix || '';
+      const suffix = x.name.indexOf(old) === 0 ? x.name.slice(old.length) : x.name;
+      if (x.module !== id) x.sel = [];
+      x.module = id; x.modErr = false; x.name = ((this.STORE_MODULES.find(m => m.id === id) || {}).prefix || '') + suffix;
+    }); };
+    v.tSetName = e => { let val = e.target.value; if (val.indexOf(pre) !== 0) val = pre + val.replace(pre.slice(0, -1), '').replace(pre, ''); this.setTrain(x => {
+      x.name = val; x.nameErr = val.length > 50 ? 'Max length is 50 characters' : '';
+    }); };
+    v.tSetDesc = e => { const val = e.target.value; this.setTrain(x => { x.desc = val; x.descErr = val.length > 150 ? 'Max length is 150 characters' : ''; }); };
+    v.tNext1 = () => this.setTrain(x => {
+      if (!x.name || !x.name.trim() || x.name.trim() === pre.trim()) { x.nameErr = 'Please enter a name for the AI model.'; return; }
+      if (!x.desc || !x.desc.trim()) { x.descErr = 'Please enter a description for the AI model.'; return; }
+      if (!x.module) { x.modErr = true; return; }
+      x.step = 2;
+    });
+    // step 1 needs a module before name/desc show, so surface the module error first
+    const next1 = v.tNext1; v.tNext1 = () => { if (!t.module) this.setTrain(x => { x.modErr = true; }); else next1(); };
+    const mods = t.module === 'assembly' ? this.TRAIN_MODULES.slice().sort((a, b) => a.variant.localeCompare(b.variant)) : [];
+    v.tNoRows = mods.length === 0;
+    v.tSelErr = t.selErr && t.sel.length === 0;
+    v.tRows = mods.map(m => {
+      const why = this.trainConflict(t, m), on = t.sel.indexOf(m.id) >= 0;
+      return {
+        variant: m.variant, capture: m.capture, module: m.name, checked: on, ariaChecked: on ? 'true' : 'false', disabled: !!why, why: why,
+        cbClass: 'fv-cb' + (on ? ' on' : ''), tipClass: 'fv-tip' + (why ? ' off' : ''), cbLabel: 'Select ' + m.name + ' (' + m.capture + ')',
+        toggle: () => this.setTrain(x => { x.selErr = false; x.sel = on ? x.sel.filter(i => i !== m.id) : x.sel.concat([m.id]); }),
+        classes: m.classes.map(c => ({ name: this.N[c], style: this.clsChipStyle(this.N[c], false), title: '' }))
+          .concat(m.neg.map(c => ({ name: this.N[c] + ' · negative', style: this.clsChipStyle(this.N[c], true), title: 'Negative class' })))
+      };
+    });
+    v.tBack2 = () => this.setTrain(x => { x.sel = []; x.step = 1; });
+    v.tNext2 = () => { if (!t.sel.length) { this.setTrain(x => { x.selErr = true; }); return; } this.say('Datasets step is not part of this prototype'); };
 
     // wizard
     const c2 = s.caps.find(c => c.id === 'c2');
