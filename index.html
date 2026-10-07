@@ -36,7 +36,7 @@ a{color:#D63F00}a:hover{color:#A83200}
 
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 16px; background: #F4F4F5; border-bottom: 1px dashed #B8B8BE; font-size: 12px; color: #52525B">
 <span style="font-weight: 700; letter-spacing: 0.06em">PROTOTYPE CONTROLS</span>
-<button class="pbtn" onClick="{{fillReady}}">Fill capture 2 to ready</button>
+<button class="pbtn" onClick="{{fillReady}}">Fill capture 5 to ready</button>
 <sc-if value="{{isAnnot}}" hint-placeholder-val="{{false}}"><button class="pbtn" onClick="{{autoLabel}}">Auto-label this image</button></sc-if>
 <button class="pbtn" onClick="{{reset}}">Reset</button>
 <span>Recommender runs take {{runSecs}} s here (real runs take a few minutes)</span>
@@ -45,7 +45,7 @@ a{color:#D63F00}a:hover{color:#A83200}
 <sc-if value="{{isWizard}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; flex-direction: column; min-height: 860px">
 <nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 24px; font-size: 13px; color: #3F3F46">
-<span>Home</span><span style="color: #A1A1AA">›</span><span>Test Project</span><span style="color: #A1A1AA">›</span><span>Recipe Management</span><span style="color: #A1A1AA">›</span><span>variant 1</span><span style="color: #A1A1AA">›</span><span>capture 2</span><span style="color: #A1A1AA">›</span><span style="font-weight: 700; color: #18181B">Module Configuration</span>
+<span>Home</span><span style="color: #A1A1AA">›</span><span>Test Project</span><span style="color: #A1A1AA">›</span><span>Recipe Management</span><span style="color: #A1A1AA">›</span><span>variant 1</span><span style="color: #A1A1AA">›</span><span>capture 5</span><span style="color: #A1A1AA">›</span><span style="font-weight: 700; color: #18181B">Module Configuration</span>
 </nav>
 <div style="flex: 1; padding: 12px 16px 32px; display: flex; justify-content: center">
 <div style="width: 100%; max-width: 1270px; display: flex; flex-direction: column; gap: 14px">
@@ -124,7 +124,7 @@ a{color:#D63F00}a:hover{color:#A83200}
 <sc-if value="{{showBanner}}" hint-placeholder-val="{{false}}">
 <div role="status" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid #F6C7AE; background: #FFF6F1; border-radius: 10px; font-size: 13px; color: #3F3F46">
 <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
-<strong style="font-weight: 700; color: #18181B">Folders for capture 2 are ready</strong>
+<strong style="font-weight: 700; color: #18181B">Folders for capture 5 are ready</strong>
 <span>Upload images into each folder and annotate them. Once every class has 5 labels, each absent class 3 absent labels and each negative class 5 negative labels, run the recommender from the top right.</span>
 </div>
 <button class="ibtn" aria-label="Dismiss" onClick="{{dismissBanner}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
@@ -183,7 +183,7 @@ Run Recommender
 <div style="display: flex; flex-direction: column">
 <nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 20px; font-size: 13px; color: #3F3F46">
 <button onClick="{{back}}" style="display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid #FF4A00; color: #D63F00; background: #FFFFFF; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer">← Datasets &amp; Annotations</button>
-<span>Test Project</span><span style="color: #A1A1AA">›</span><span>variant 1</span><span style="color: #A1A1AA">›</span><span>capture 2</span><span style="color: #A1A1AA">›</span><span>{{folderName}}</span><span style="color: #A1A1AA">›</span><span style="font-weight: 700; color: #18181B">{{dsName}}</span>
+<span>Test Project</span><span style="color: #A1A1AA">›</span><span>variant 1</span><span style="color: #A1A1AA">›</span><span>capture 5</span><span style="color: #A1A1AA">›</span><span>{{folderName}}</span><span style="color: #A1A1AA">›</span><span style="font-weight: 700; color: #18181B">{{dsName}}</span>
 </nav>
 <div style="display: flex; flex-wrap: wrap; border-top: 1px solid #E4E4E7; min-height: 790px">
 <div style="flex: 0 1 410px; min-width: 320px; border-right: 1px solid #E4E4E7; display: flex; flex-direction: column">
@@ -282,27 +282,26 @@ Run Recommender
 <div style="padding: 10px 20px; background: #FAFAFA; border-bottom: 1px solid #EFEFF1; font-size: 12px; color: #52525B">Rules per capture: each class needs <strong>5</strong> labelled instances. Each absent class needs <strong>3</strong> absent labels, placed within the first 5 images without it. Each negative class needs <strong>5</strong> negative labels, placed within the first 5 images of its folder.</div>
 <div style="padding: 14px 20px; max-height: 520px; overflow-y: auto">
 <div role="table" aria-label="Captures" style="border: 1px solid #EAEAEC; border-radius: 10px; overflow: hidden">
-<div role="row" style="display: grid; grid-template-columns: 44px minmax(130px, 1fr) minmax(170px, 1.5fr) minmax(150px, 1.1fr); background: #FF4A00; color: #FFFFFF; font-size: 13px; font-weight: 700">
+<div role="row" style="display: grid; grid-template-columns: 44px minmax(130px, 1fr) minmax(150px, 1.1fr) minmax(170px, 1.5fr); background: #FF4A00; color: #FFFFFF; font-size: 13px; font-weight: 700">
 <div role="columnheader" style="padding: 10px 0; display: flex; justify-content: center; align-items: center"><input type="checkbox" aria-label="Select all ready captures" checked="{{allChecked}}" disabled="{{noneSelectable}}" onChange="{{toggleAll}}" style="width: 17px; height: 17px; accent-color: #18181B; margin: 0"></div>
 <div role="columnheader" style="padding: 10px 12px">Capture</div>
-<div role="columnheader" style="padding: 10px 12px">Classes</div>
 <div role="columnheader" style="padding: 10px 12px">Status</div>
+<div role="columnheader" style="padding: 10px 12px">Classes</div>
 </div>
 <sc-for list="{{capRows}}" as="r" hint-placeholder-count="4">
-<div role="row" style="display: grid; grid-template-columns: 44px minmax(130px, 1fr) minmax(170px, 1.5fr) minmax(150px, 1.1fr); border-top: 1px solid #EFEFF1; font-size: 13px; {{r.rowStyle}}">
+<div role="row" style="display: grid; grid-template-columns: 44px minmax(130px, 1fr) minmax(150px, 1.1fr) minmax(170px, 1.5fr); border-top: 1px solid #EFEFF1; font-size: 13px; {{r.rowStyle}}">
 <div role="cell" style="padding: 12px 0; display: flex; justify-content: center; align-items: flex-start"><input type="checkbox" id="{{r.cid}}" aria-label="{{r.selLabel}}" checked="{{r.checked}}" disabled="{{r.locked}}" onChange="{{r.toggle}}" style="width: 17px; height: 17px; accent-color: #FF4A00; margin: 1px 0 0; {{r.boxStyle}}"></div>
 <div role="cell" style="padding: 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0">
 <label for="{{r.cid}}" style="font-weight: 700; {{r.nameStyle}}">{{r.name}}</label>
 <span style="font-size: 12px; color: #71717A">{{r.sub}}</span>
 </div>
-<div role="cell" style="padding: 12px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; min-width: 0"><sc-for list="{{r.clsChips}}" as="d"><span class="chip" style="{{d.style}}">{{d.text}}</span></sc-for></div>
 <div role="cell" style="padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
 <span class="chip" style="{{r.pillStyle}}"><sc-if value="{{r.icRun}}" hint-placeholder-val="{{false}}"><span class="spin" style="margin-right: 6px"></span></sc-if>{{r.status}}</span>
-<sc-if value="{{r.canAnnotate}}" hint-placeholder-val="{{false}}"><button class="link" style="font-size: 13px; white-space: nowrap; margin-left: auto" onClick="{{r.annotate}}">Annotate →</button></sc-if>
 </div>
 <sc-if value="{{r.hasNote}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; color: #52525B">{{r.note}}</span></sc-if>
 </div>
+<div role="cell" style="padding: 12px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; min-width: 0"><sc-for list="{{r.clsChips}}" as="d"><span class="chip" style="{{d.style}}">{{d.text}}</span></sc-for></div>
 </div>
 </sc-for>
 </div>
@@ -473,7 +472,7 @@ class Component extends DCLogic {
       odc3: [{ l: 54.5, t: 65, w: 4.5, h: 6 }, { l: 39.5, t: 65, w: 4.5, h: 6 }],
       odc4: [{ l: 30.5, t: 39, w: 7, h: 12 }, { l: 11, t: 51, w: 7, h: 12 }]
     };
-    this.GEN = { fA: 180, fB: 120, fC: 110, f1: 150, f2: 210, f3: 130, f4: 170, f5: 90, f6: 160 };
+    this.GEN = { fA: 180, fB: 120, fC: 110, f1: 150, f2: 210, f3: 130, f4: 170, f5: 90, f6: 160, f7: 140, f8: 95 };
     this.SLOTS = ['00:00 - 06:00', '06:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00'];
     this.COMBOS = ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3', 'odc1|odc4'];
     this.KIND = { absent: ' · absent', neg: ' · negative', present: '' };
@@ -490,13 +489,16 @@ class Component extends DCLogic {
       screen: 'wizard', modal: false, banner: false, toast: null, firstFinish: true,
       caps: [
         { id: 'c1', variant: 'variant 1', name: 'capture 1', classes: ['odc1', 'odc2'], absent: [], live: false, staticReady: true, rec: { state: 'none' } },
-        { id: 'c2', variant: 'variant 1', name: 'capture 2', classes: ['odc1', 'odc2', 'odc3'], absent: ['odc3'], neg: ['odc4'], negOf: { odc4: 'odc2' }, live: true, rec: { state: 'none' } },
+        { id: 'c6', variant: 'variant 1', name: 'capture 2', classes: ['odc1', 'odc2', 'odc3'], absent: [], live: false, staticReady: true, rec: { state: 'none' } },
         { id: 'c3', variant: 'variant 1', name: 'capture 3', classes: ['clsD', 'clsE', 'clsF'], absent: [], live: false, staticReady: true, rec: { state: 'none' } },
-        { id: 'c4', variant: 'variant 1', name: 'capture 4', classes: ['clsE', 'clsF', 'clsG'], absent: [], live: false, staticReady: true, rec: { state: 'outdated', reason: "Folder 'E & F & G' added after the last run" } }
+        { id: 'c4', variant: 'variant 1', name: 'capture 4', classes: ['clsE', 'clsF', 'clsG'], absent: [], live: false, staticReady: true, rec: { state: 'outdated', reason: "Folder 'E & F & G' added after the last run" } },
+        { id: 'c2', variant: 'variant 1', name: 'capture 5', classes: ['odc1', 'odc2', 'odc3'], absent: ['odc3'], neg: ['odc4'], negOf: { odc4: 'odc2' }, live: true, rec: { state: 'none' } }
       ],
       folders: [
         fo('f1', 'c1', ['odc1'], null, '9/8/2026'),
         fo('f2', 'c1', ['odc1', 'odc2'], null, '9/8/2026'),
+        fo('f7', 'c6', ['odc1', 'odc2', 'odc3'], null, '9/30/2026'),
+        fo('f8', 'c6', ['odc1', 'odc2'], null, '9/30/2026'),
         fo('fA', 'c2', ['odc1', 'odc2', 'odc3'], null, '10/5/2026'),
         fo('fB', 'c2', ['odc1', 'odc2'], null, '10/5/2026'),
         fo('fC', 'c2', ['odc1', 'odc4', 'odc3'], null, '10/5/2026'),
@@ -508,6 +510,8 @@ class Component extends DCLogic {
       datasets: [
         { id: 'dx1', folder: 'f1', slot: 0, name: 'batch-1', sAnn: 12, sTot: 12 },
         { id: 'dx2', folder: 'f2', slot: 0, name: 'batch-1', sAnn: 18, sTot: 18 },
+        { id: 'dx7', folder: 'f7', slot: 0, name: 'batch-2', sAnn: 20, sTot: 20 },
+        { id: 'dx8', folder: 'f8', slot: 0, name: 'batch-2', sAnn: 15, sTot: 15 },
         { id: 'd1', folder: 'fA', slot: 0, name: 'hbj' },
         { id: 'dx3', folder: 'f3', slot: 1, name: 'line-cam', sAnn: 13, sTot: 13 },
         { id: 'dx4', folder: 'f4', slot: 1, name: 'line-cam', sAnn: 21, sTot: 21 },
@@ -614,9 +618,9 @@ class Component extends DCLogic {
       cur.forEach(f => { if (s.wiz.indexOf(f.classes.join('|')) < 0) { s.folders = s.folders.filter(x => x.id !== f.id); removed.push(this.fname(f)); } });
       if (added.length || removed.length) {
         const reason = added.length ? "Folder '" + added[0] + "' added" : "Folder '" + removed[0] + "' removed";
-        if (cap.rec.state === 'generated' || cap.rec.state === 'outdated') { cap.rec = { state: 'outdated', reason: reason }; msg = 'Folders updated · capture 2 recommendations are now outdated'; }
-        else if (cap.rec.state === 'running') { cap.rec.dirty = reason; msg = 'Folders updated · the running recommendation for capture 2 will land as outdated'; }
-        else msg = 'Folders updated for capture 2';
+        if (cap.rec.state === 'generated' || cap.rec.state === 'outdated') { cap.rec = { state: 'outdated', reason: reason }; msg = 'Folders updated · capture 5 recommendations are now outdated'; }
+        else if (cap.rec.state === 'running') { cap.rec.dirty = reason; msg = 'Folders updated · the running recommendation for capture 5 will land as outdated'; }
+        else msg = 'Folders updated for capture 5';
       }
       if (s.firstFinish) { s.banner = true; s.firstFinish = false; }
       s.screen = 'datasets';
@@ -739,7 +743,7 @@ class Component extends DCLogic {
   /* ---------- annotation ---------- */
   commitCur(s) { const img = s.images.find(i => i.id === s.cur); if (img && img.boxes.length && !img.saved) img.saved = true; }
   readyToast(before, s, fallback) {
-    if (!before && this.readyNow(s)) this.say('capture 2 now meets every label rule. Run Recommender is ready on Datasets & Annotations.');
+    if (!before && this.readyNow(s)) this.say('capture 5 now meets every label rule. Run Recommender is ready on Datasets & Annotations.');
     else if (fallback) this.say(fallback);
   }
   goImg(id, mode) {
@@ -868,7 +872,7 @@ class Component extends DCLogic {
       if (s.folders.find(f => f.id === 'fB')) { imgsOf('fB').slice(0, 3).forEach(im => set(im, [b('odc1', 0), b('odc2', 0), b('odc3', 0, 'absent')])); s.exp.fB = true; s.expSlot['fB|0'] = true; }
       if (s.folders.find(f => f.id === 'fC')) { imgsOf('fC').slice(0, 3).forEach(im => set(im, [b('odc1', 0), b('odc3', 0), b('odc4', 0, 'neg'), b('odc4', 1, 'neg')])); s.exp.fC = true; s.expSlot['fC|0'] = true; }
     });
-    if (this.readyNow(s)) this.say(before ? 'capture 2 already met every rule' : 'capture 2 now meets every label rule. Open Run Recommender.');
+    if (this.readyNow(s)) this.say(before ? 'capture 5 already met every rule' : 'capture 5 now meets every label rule. Open Run Recommender.');
     else this.say('Labels added');
   }
   reset() { this.timers.forEach(t => clearTimeout(t)); this.timers = []; this.setState(this.initial()); }

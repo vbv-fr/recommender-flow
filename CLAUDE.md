@@ -30,7 +30,7 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
    - They never block Save & Next or training.
    - Copy Master Image Annotation skips them. It also skips classes not in the target folder, and keeps the target image's existing recommender-only boxes.
 8. **No label-status panel** in the annotation tool. Readiness lives only in the Run Recommender popup.
-9. **Run Recommender button.** It sits top right, is always clickable, and carries an "N ready" pill. The popup is a table: checkbox | Capture | Classes | Status. Classes shows each class chip; when short, the chip gets a "· N more" suffix, and short absent/negative labels follow as dashed chips ("C · absent · 3 more"). Status: Ready to run, Outdated + reason, Missing classes + "Annotate →", Running, Up to date. Only Ready and Outdated rows can be ticked; nothing is pre-ticked; the header checkbox selects all. "Next" is disabled until a box is ticked and runs the standard recommender. Runs are async: minutes in reality, 8 s here (override with `?run=N`). There is no cancel.
+9. **Run Recommender button.** It sits top right, is always clickable, and carries an "N ready" pill. The popup is a table: checkbox | Capture | Status | Classes. Classes shows each class chip; when short, the chip gets a "· N more" suffix, and short absent/negative labels follow as dashed chips ("C · absent · 3 more"). Status: Ready to run, Outdated + reason, Missing classes (no Annotate link), Running, Up to date. Only Ready and Outdated rows can be ticked; nothing is pre-ticked; the header checkbox selects all. "Next" is disabled until a box is ticked and runs the standard recommender. Runs are async: minutes in reality, 8 s here (override with `?run=N`). There is no cancel.
    - **Advanced Mode.** When 2+ ticked captures include at least one pair sharing a class, a "Setup Advanced Mode" button (with an ⓘ tooltip: "Gives optimised recommendation counts by combining captures with overlapping classes") appears left of Next. It opens a second step: captures are pre-grouped by shared classes (connected components; a capture with no overlap is its own group). × unassigns a capture into an "Unassigned" tray; an "Assign to…" dropdown puts it into an existing group or a new one. Empty groups vanish. A group whose captures don't all overlap shows an amber "Some captures share no classes" note (not blocking). "Run Advanced Mode" appears only when nothing is unassigned.
 10. **Recommended column, per folder.** It shows one of:
     - "—" when not run
@@ -44,10 +44,10 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
     - the only folder without an absent class
     - the only folder with a negative class
 
-**Demo data (4 captures, all variant 1):**
-- capture 1: A, B (ready). capture 2: A, B, C, the live one (A=odc1, B=odc2, C=odc3 internally). C is marked Absent; H (odc4) is the negative class of B. Folders "A & B & C", "A & B", "A & H & C". It starts not ready; use "Fill capture 2 to ready".
+**Demo data (5 captures, all variant 1):**
+- capture 1: A, B (ready). capture 2: A, B, C (ready). capture 5: A, B, C, the live one (A=odc1, B=odc2, C=odc3 internally). C is marked Absent; H (odc4) is the negative class of B. Folders "A & B & C", "A & B", "A & H & C". It starts not ready; use "Fill capture 5 to ready".
 - capture 3: D, E, F (ready). capture 4: E, F, G (Outdated).
-- Overlaps: 1↔2 (A, B) and 3↔4 (E, F). 1+3 or 2+4 have none.
+- Overlaps: 1, 2 and 5 share A, B; 3↔4 share E, F. 1+3 or 2+4 have none.
 
 **Prototype controls bar:** Fill capture 2 to ready, Auto-label this image, Reset.
 
