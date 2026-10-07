@@ -18,7 +18,7 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
    - It appears ONLY on the first 5 images of the capture that sit in folders WITHOUT that class.
    - Images are ordered by dataset creation, then by image order.
    - It draws a dashed box where the class would normally sit.
-5. **Negative label.** A `<neg> · negative` chip.
+5. **Negative label.** Negative classes are written "!H" everywhere outside AI Model Training: the annotation chip ("!H 0/5"), box labels, folder names and folder chips ("A & !H & C"), wizard folder lists and the recommender deficit chips ("!H · 5 more").
    - It appears ONLY on the first 5 images in folders CONTAINING the negative class.
    - It draws a dotted box.
    - A negative class is never offered as a normal class chip.
@@ -32,7 +32,6 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
    - Copy Master Image Annotation skips them. It also skips classes not in the target folder, and keeps the target image's existing recommender-only boxes.
 9. **No label-status panel** in the annotation tool. Readiness lives only in the Run Recommender popup.
 10. **Run Recommender button.** It sits top right and is always clickable (no "N ready" pill). The popup is a table: checkbox | Capture | Status | Classes. Classes shows each class chip; when short, the chip gets a "· N more" suffix, and short absent/negative labels follow as dashed chips ("C · absent · 3 more"). Status: Ready to run, Outdated + reason, Missing classes (no Annotate link), Running, Up to date. Only Ready and Outdated rows can be ticked; nothing is pre-ticked; the header checkbox selects all. "Run Recommender" (footer button) is disabled until a box is ticked and runs the standard recommender. Runs are async: minutes in reality, 8 s here (override with `?run=N`). There is no cancel.
-   - **Advanced Mode.** When 2+ ticked captures include at least one pair sharing a class, a "Setup Advanced Mode" button (with an ⓘ tooltip: "Gives optimised recommendations by combining captures with overlapping classes") appears left of Run Recommender. It opens a second step: captures are pre-grouped by shared classes (connected components; a capture with no overlap is its own group). × unassigns a capture into an "Unassigned" tray; an "Assign to…" dropdown puts it into an existing group or a new one. Empty groups vanish. A group whose captures don't all overlap shows an amber "Some captures share no classes" note (not blocking). "Run Advanced Mode" appears only when nothing is unassigned.
 11. **Recommended column, per folder.** It shows one of:
     - "—" when not run
     - a spinner with "Running"
@@ -55,7 +54,8 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
 - capture 3 · ODC-1: D, E, F
 - capture 4 · ODC-2: F
 - capture 4 · ODC-3: E, G, with F as a NEGATIVE class (not shown as a chip; it only drives the conflict rule)
-- Rule: one training job can't hold a class as both normal and negative. Selecting ODC-1/ODC-2 greys out ODC-3 and vice versa; the greyed checkbox shows a hover tooltip (real Tooltip styling) naming the class and the conflicting module(s). Steps 3–5 are not built; Next on step 2 shows a toast.
+- Step 2 rule: one training job can't hold a class as both normal and negative. Selecting ODC-1/ODC-2 greys out ODC-3 and vice versa; the greyed checkbox shows a hover tooltip naming the class and the conflicting module(s). ODC-3 shows a dashed "F · negative" chip (training keeps this style, not "!F").
+- Step 3 (Datasets): replica of `dataset.tsx` tree (Select All → capture → class folder → time slot → dataset, three-state checkboxes, annotated/count colours, Next disabled with "Select at least one dataset for each Capture"). Capture 4 has a folder "E & !F & G" (F negative) shown with an "F · negative" chip. Rule: a folder is blocked when one of its negative classes is a normal class of a selected module (e.g. ODC-1/ODC-2 selected → that folder greyed, tooltip names the module). With only ODC-3 it is selectable. Steps 4–5 not built; Next on step 3 shows a toast.
 
 **Prototype controls bar:** Fill capture 5 to ready, AI Model Training (and Datasets & Annotations to return), Auto-label this image, Reset.
 

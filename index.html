@@ -35,6 +35,8 @@ a{color:#D63F00}a:hover{color:#A83200}
 .fv-btn.border{background:transparent;border-color:#ff4301;color:#ff4301}
 .fv-btn.border:hover{opacity:.7}
 .fv-btn:disabled{background:#E5E7EB;color:#6B7280;cursor:not-allowed}
+.fv-tip .fv-btn:disabled,.fv-tip .fv-3cb:disabled{pointer-events:none}
+.fv-tip.top{cursor:not-allowed}
 .fv-filter{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#111827;cursor:pointer}
 .fv-th{position:relative;padding:16px 8px;text-align:center;font-size:16px;font-weight:500;color:#fff}
 .fv-th:not(:last-child)::after{content:'';position:absolute;top:10px;right:0;bottom:10px;width:2px;border-radius:16px;background:#fff}
@@ -52,6 +54,15 @@ a{color:#D63F00}a:hover{color:#A83200}
 .fv-cls{display:inline-flex;align-items:center;border-radius:6px;padding:2px 8px;white-space:nowrap;font-size:14px;font-weight:500}
 .fv-input{font-family:inherit;font-size:16px;padding:8px 12px;border-radius:6px;border:1px solid #D1D5DB;background:#fff;width:100%;color:#000}
 .fv-input:focus{outline:2px solid #ff4301;outline-offset:-1px;border-color:#ff4301}
+
+.fv-3cb{position:relative;display:inline-flex;padding-top:8px;cursor:pointer;background:none;border:0;padding-left:0;padding-right:0}
+.fv-3cb>span{display:inline-block;width:28px;height:28px;border-radius:6px;border:2px solid #9CA3AF;background:#fff;position:relative}
+.fv-3cb.checked>span{background:#ff4301}
+.fv-3cb.partial>span{background:#D1D5DB}
+.fv-3cb:disabled{cursor:not-allowed;opacity:.6}
+.fv-3cb:disabled>span{background:#C3C5C5}
+.fv-3cb svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.fv-tip.top .fv-tipbox{left:0;top:auto;bottom:calc(100% + 8px);transform:none}
 </style>
 </head>
 <body>
@@ -77,15 +88,27 @@ a{color:#D63F00}a:hover{color:#A83200}
 <div style="flex: 1; padding: 12px 16px 32px; display: flex; justify-content: center">
 <div style="width: 100%; max-width: 1270px; display: flex; flex-direction: column; gap: 14px">
 <h2 style="margin: 0; font-size: 17px; font-weight: 600; padding-bottom: 12px; border-bottom: 1px solid #D4D4D8">Define Class Properties</h2>
-<div style="overflow-x: auto">
-<div style="min-width: 640px">
+<div>
+<div>
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #FF4A00; color: #FFFFFF; font-weight: 700; font-size: 14px; min-height: 46px; align-items: center; text-align: center">
 <div>Class Name</div><div>Negative Classes</div><div>Absent Case</div>
 </div>
 <sc-for list="{{classRows}}" as="c" hint-placeholder-count="3">
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 46px; align-items: center; text-align: center; border-bottom: 1px solid #EFEFF1; font-size: 14px">
 <div>{{c.name}}</div>
-<div style="display: flex; justify-content: center"><span style="display: inline-flex; align-items: center; justify-content: space-between; gap: 12px; height: 32px; padding: 0 10px; border: 1px solid #E4E4E7; border-radius: 6px; color: #A1A1AA; font-size: 13px; min-width: 180px"><sc-if value="{{c.noNeg}}" hint-placeholder-val="{{true}}">Select negative classes</sc-if><sc-if value="{{c.hasNeg}}" hint-placeholder-val="{{false}}"><span style="display: inline-flex; gap: 4px"><sc-for list="{{c.negChips}}" as="ch"><span class="chip" style="height: 22px; {{ch.style}}">{{ch.label}}</span></sc-for></span></sc-if> <span aria-hidden="true">▾</span></span></div>
+<div style="display: flex; justify-content: center; position: relative">
+<button onClick="{{c.toggleMenu}}" aria-expanded="{{c.menuOpen}}" aria-label="{{c.menuLabel}}" style="display: inline-flex; align-items: center; justify-content: space-between; gap: 12px; height: 32px; padding: 0 10px; border: 1px solid #E4E4E7; border-radius: 6px; background: #FFFFFF; color: #A1A1AA; font: inherit; font-size: 13px; min-width: 180px; cursor: pointer"><sc-if value="{{c.noNeg}}" hint-placeholder-val="{{true}}">Select negative classes</sc-if><sc-if value="{{c.hasNeg}}" hint-placeholder-val="{{false}}"><span style="display: inline-flex; gap: 4px"><sc-for list="{{c.negChips}}" as="ch"><span class="chip" style="height: 22px; {{ch.style}}">{{ch.label}}</span></sc-for></span></sc-if> <span aria-hidden="true">▾</span></button>
+<sc-if value="{{c.menuOpenB}}" hint-placeholder-val="{{false}}">
+<div role="listbox" aria-multiselectable="true" style="position: absolute; top: 38px; left: 50%; transform: translateX(-50%); z-index: 15; width: 230px; background: #FFFFFF; border: 1px solid #E4E4E7; border-radius: 8px; box-shadow: 0 10px 24px rgba(0,0,0,.12); padding: 4px; text-align: left">
+<sc-for list="{{c.options}}" as="o">
+<span class="{{o.tipClass}}" style="display: flex">
+<button role="option" aria-selected="{{o.selected}}" aria-disabled="{{o.disabledAttr}}" onClick="{{o.pick}}" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 6px; background: none; font: inherit; font-size: 13px; text-align: left; {{o.style}}"><input type="checkbox" checked="{{o.checkedB}}" disabled="{{o.disabled}}" tabindex="-1" style="width: 15px; height: 15px; accent-color: #FF4A00; margin: 0; pointer-events: none"><span style="flex: 1">{{o.name}}</span><sc-if value="{{o.disabled}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; color: #A1A1AA">Detection class</span></sc-if></button>
+<sc-if value="{{o.disabled}}" hint-placeholder-val="{{false}}"><span class="tipbox" role="tooltip" style="right: auto; left: 8px; bottom: calc(100% + 4px)">{{o.why}}</span></sc-if>
+</span>
+</sc-for>
+</div>
+</sc-if>
+</div>
 <div style="display: flex; justify-content: center"><input type="checkbox" checked="{{c.absent}}" disabled="{{true}}" aria-label="{{c.absentLabel}}" style="width: 18px; height: 18px; accent-color: #FF4A00; margin: 0"></div>
 </div>
 </sc-for>
@@ -401,6 +424,62 @@ Run Recommender
 </div>
 </sc-if>
 
+<sc-if value="{{tStep3}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; height: 80vh; width: min(960px, calc(100vw - 330px)); min-width: 280px; flex-direction: column; overflow-y: auto; padding: 16px">
+<h3 style="margin: 0; font-size: 20px; font-weight: 600">Datasets</h3>
+<div style="display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #E5E7EB; padding: 8px 0"><button class="{{tAll.cbClass}}" role="checkbox" aria-checked="{{tAll.aria}}" aria-label="{{tAll.cbLabel}}" disabled="{{tAll.disabled}}" onClick="{{tAll.toggle}}"><span><sc-if value="{{tAll.isChecked}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 13l4 4L19 7"></path></svg></sc-if><sc-if value="{{tAll.isPartial}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path></svg></sc-if></span></button><span style="padding-top: 8px; font-size: 14px; font-weight: 600">Select All</span></div>
+<sc-for list="{{tCaps}}" as="cc">
+<div style="display: flex; flex-direction: column; padding: 8px 16px">
+<div onClick="{{cc.toggleOpen}}" style="display: flex; cursor: pointer; align-items: flex-start; gap: 20px; border-bottom: 1px solid #B4B6B8; padding-bottom: 4px">
+<div style="width: 30px; flex-shrink: 0; padding-top: 8px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="{{cc.rot}}; transition: transform .2s"><path d="M6 9l6 6 6-6"></path></svg></div>
+<div onClick="{{stop}}" style="display: flex; flex-shrink: 0"><button class="{{cc.cbClass}}" role="checkbox" aria-checked="{{cc.aria}}" aria-label="{{cc.cbLabel}}" disabled="{{cc.disabled}}" onClick="{{cc.toggle}}"><span><sc-if value="{{cc.isChecked}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 13l4 4L19 7"></path></svg></sc-if><sc-if value="{{cc.isPartial}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path></svg></sc-if></span></button></div>
+<div style="display: flex; flex-shrink: 0; gap: 50px; padding-top: 8px"><div style="width: 200px">{{cc.variant}}</div><div style="width: 200px">{{cc.capture}}</div></div>
+</div>
+<sc-if value="{{cc.open}}" hint-placeholder-val="{{true}}">
+<div style="margin-left: 32px; display: flex; flex-direction: column; gap: 8px; padding-top: 8px">
+<sc-for list="{{cc.roots}}" as="rt">
+<div style="display: flex; flex-direction: column; padding: 4px 0 0 16px">
+<div onClick="{{rt.toggleOpen}}" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; border-bottom: 1px solid #B4B6B8; padding-bottom: 4px; {{rt.cursor}}">
+<div style="display: flex; align-items: flex-start; gap: 20px">
+<div style="display: flex; align-items: center; padding-top: 4px; width: 24px"><sc-if value="{{rt.canOpen}}" hint-placeholder-val="{{true}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="{{rt.rot}}; transition: transform .2s"><path d="M6 9l6 6 6-6"></path></svg></sc-if></div>
+<div onClick="{{stop}}" style="display: flex; align-items: center"><span class="fv-tip top"><button class="{{rt.cbClass}}" role="checkbox" aria-checked="{{rt.aria}}" aria-label="{{rt.cbLabel}}" disabled="{{rt.disabled}}" onClick="{{rt.toggle}}"><span><sc-if value="{{rt.isChecked}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 13l4 4L19 7"></path></svg></sc-if><sc-if value="{{rt.isPartial}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path></svg></sc-if></span></button><sc-if value="{{rt.disabled}}" hint-placeholder-val="{{false}}"><span class="fv-tipbox" role="tooltip">{{rt.why}}</span></sc-if></span></div>
+<div style="display: flex; flex-wrap: wrap; gap: 4px; padding-top: 10px; width: 400px"><sc-for list="{{rt.chips}}" as="c"><span class="fv-cls" title="{{c.title}}" style="{{c.style}}">{{c.name}}</span></sc-for></div>
+</div>
+<div style="padding-top: 8px; {{rt.countStyle}}">{{rt.count}}</div>
+</div>
+<sc-if value="{{rt.open}}" hint-placeholder-val="{{false}}">
+<div style="margin-left: 32px; display: flex; flex-direction: column; gap: 8px; padding-top: 8px">
+<sc-for list="{{rt.slots}}" as="sl">
+<div style="display: flex; flex-direction: column; padding: 4px 0 0 56px">
+<div onClick="{{sl.toggleOpen}}" style="display: flex; cursor: pointer; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid #B4B6B8; padding-bottom: 4px">
+<div style="display: flex; align-items: center; gap: 8px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="{{sl.rot}}; transition: transform .2s"><path d="M6 9l6 6 6-6"></path></svg><span onClick="{{stop}}"><button class="{{sl.cbClass}}" role="checkbox" aria-checked="{{sl.aria}}" aria-label="{{sl.cbLabel}}" disabled="{{sl.disabled}}" onClick="{{sl.toggle}}"><span><sc-if value="{{sl.isChecked}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 13l4 4L19 7"></path></svg></sc-if><sc-if value="{{sl.isPartial}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path></svg></sc-if></span></button></span><div style="width: 200px; padding-top: 8px">{{sl.name}}</div></div>
+<div style="{{sl.countStyle}}">{{sl.count}}</div>
+</div>
+<sc-if value="{{sl.open}}" hint-placeholder-val="{{false}}">
+<sc-for list="{{sl.folders}}" as="fd">
+<div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #B4B6B8; padding: 0 0 4px 70px">
+<div style="display: flex; align-items: center; gap: 8px"><button class="{{fd.cbClass}}" role="checkbox" aria-checked="{{fd.aria}}" aria-label="{{fd.cbLabel}}" disabled="{{fd.disabled}}" onClick="{{fd.toggle}}"><span><sc-if value="{{fd.isChecked}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 13l4 4L19 7"></path></svg></sc-if><sc-if value="{{fd.isPartial}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path></svg></sc-if></span></button><div style="width: 200px; padding-top: 8px">{{fd.name}}</div></div>
+<div style="{{fd.countStyle}}">{{fd.count}}</div>
+</div>
+</sc-for>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; width: min(960px, calc(100vw - 330px)); min-width: 280px; justify-content: space-between; padding-top: 20px; margin-top: 20px">
+<div style="display: flex; align-items: center; gap: 8px"><button class="fv-btn border" onClick="{{tBack3}}">Back</button><span class="fv-tip top"><button class="fv-btn" disabled="{{tNext3Disabled}}" onClick="{{tNext3}}">Next</button><sc-if value="{{tNext3Disabled}}" hint-placeholder-val="{{false}}"><span class="fv-tipbox" role="tooltip">{{tNext3Why}}</span></sc-if></span></div>
+<button class="fv-btn border" onClick="{{closeTrain}}">Cancel</button>
+</div>
+</sc-if>
+
 </div>
 </div>
 </div>
@@ -450,52 +529,7 @@ Run Recommender
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFEFF1">
 <span style="flex: 1; font-size: 13px; color: #52525B">{{selText}}</span>
 <button onClick="{{closeModal}}" style="height: 38px; padding: 0 16px; border: 1px solid #D4D4D8; background: #FFFFFF; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer">Cancel</button>
-<sc-if value="{{showAdvanced}}" hint-placeholder-val="{{false}}">
-<span style="display: inline-flex; align-items: center; gap: 6px">
-<button onClick="{{setupAdvanced}}" style="height: 38px; padding: 0 16px; border: 1px solid #FF4A00; background: #FFFFFF; color: #D63F00; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer">Setup Advanced Mode</button>
-<span class="tip" tabindex="0" aria-label="Gives optimised recommendations by combining captures with overlapping classes"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M12 11v6M12 7.5v.01"></path></svg><span class="tipbox" role="tooltip">Gives optimised recommendations by combining captures with overlapping classes</span></span>
-</span>
-</sc-if>
 <button onClick="{{run}}" disabled="{{runDisabled}}" style="height: 38px; padding: 0 18px; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; {{runStyle}}">{{runText}}</button>
-</div>
-</sc-if>
-<sc-if value="{{isAdvanced}}" hint-placeholder-val="{{false}}">
-<div style="padding: 14px 20px; display: flex; flex-direction: column; gap: 12px; max-height: 560px; overflow-y: auto">
-<sc-if value="{{hasPool}}" hint-placeholder-val="{{false}}">
-<div style="border: 1px dashed #F0A37E; border-radius: 10px; background: #FFF8F4">
-<div style="padding: 9px 14px; font-size: 13px; font-weight: 700; color: #B23400; border-bottom: 1px dashed #F6C9B4">Unassigned</div>
-<sc-for list="{{pool}}" as="u">
-<div style="display: flex; align-items: center; gap: 10px; padding: 9px 14px; flex-wrap: wrap">
-<span style="font-weight: 700; font-size: 13px; min-width: 140px">{{u.name}}</span>
-<span style="display: flex; gap: 4px; flex: 1; flex-wrap: wrap"><sc-for list="{{u.chips}}" as="c"><span class="chip" style="{{c.style}}">{{c.label}}</span></sc-for></span>
-<select aria-label="{{u.pickLabel}}" value="" onChange="{{u.pick}}" style="height: 32px; padding: 0 8px; border: 1px solid #D4D4D8; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 600; background: #FFFFFF; cursor: pointer">
-<option value="">Assign to…</option>
-<sc-for list="{{u.options}}" as="o"><option value="{{o.value}}">{{o.label}}</option></sc-for>
-</select>
-</div>
-</sc-for>
-</div>
-</sc-if>
-<sc-for list="{{advGroups}}" as="g" hint-placeholder-count="2">
-<div style="border: 1px solid #EAEAEC; border-radius: 10px; overflow: hidden">
-<div style="display: flex; align-items: baseline; gap: 10px; padding: 9px 14px; background: #FAFAFA; border-bottom: 1px solid #EFEFF1">
-<span style="font-size: 13px; font-weight: 700">{{g.title}}</span>
-<span style="font-size: 12px; {{g.noteStyle}}">{{g.note}}</span>
-</div>
-<sc-for list="{{g.members}}" as="m">
-<div style="display: flex; align-items: center; gap: 10px; padding: 9px 8px 9px 14px; border-top: 1px solid #F4F4F5; flex-wrap: wrap">
-<span style="font-weight: 700; font-size: 13px; min-width: 140px">{{m.name}}</span>
-<span style="display: flex; gap: 4px; flex: 1; flex-wrap: wrap"><sc-for list="{{m.chips}}" as="c"><span class="chip" style="{{c.style}}">{{c.label}}</span></sc-for></span>
-<button class="ibtn" aria-label="{{m.removeLabel}}" title="Unassign" onClick="{{m.remove}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-</div>
-</sc-for>
-</div>
-</sc-for>
-</div>
-<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFEFF1">
-<span style="flex: 1; font-size: 13px; color: #52525B">{{advText}}</span>
-<button onClick="{{backToSelect}}" style="height: 38px; padding: 0 16px; border: 1px solid #D4D4D8; background: #FFFFFF; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer">Back</button>
-<sc-if value="{{allAssigned}}" hint-placeholder-val="{{false}}"><button onClick="{{runAdvanced}}" style="height: 38px; padding: 0 18px; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; background: #FF4A00; color: #FFFFFF; cursor: pointer">Run Advanced Mode</button></sc-if>
 </div>
 </sc-if>
 </div>
@@ -627,7 +661,7 @@ class Component extends DCLogic {
       odc3: [{ l: 54.5, t: 65, w: 4.5, h: 6 }, { l: 39.5, t: 65, w: 4.5, h: 6 }],
       odc4: [{ l: 30.5, t: 39, w: 7, h: 12 }, { l: 11, t: 51, w: 7, h: 12 }]
     };
-    this.GEN = { fA: 180, fB: 120, fC: 110, f1: 150, f2: 210, f3: 130, f4: 170, f5: 90, f6: 160, f7: 140, f8: 95 };
+    this.GEN = { fA: 180, fB: 120, fC: 110, f1: 150, f2: 210, f3: 130, f4: 170, f5: 90, f6: 160, f7: 140, f8: 95, f9: 60 };
     this.SLOTS = ['00:00 - 06:00', '06:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00'];
     this.COMBOS = ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3', 'odc1|odc4'];
     this.KIND = { absent: ' · absent', neg: ' · negative', present: '' };
@@ -660,7 +694,8 @@ class Component extends DCLogic {
         fo('f3', 'c3', ['clsD', 'clsE'], null, '7/14/2026'),
         fo('f4', 'c3', ['clsD', 'clsE', 'clsF'], null, '7/14/2026'),
         fo('f5', 'c4', ['clsE', 'clsF'], 90, '9/22/2026'),
-        fo('f6', 'c4', ['clsE', 'clsF', 'clsG'], null, '10/1/2026')
+        fo('f6', 'c4', ['clsE', 'clsF', 'clsG'], null, '10/1/2026'),
+        Object.assign(fo('f9', 'c4', ['clsE', 'clsF', 'clsG'], null, '10/2/2026'), { neg: ['clsF'] })
       ],
       datasets: [
         { id: 'dx1', folder: 'f1', slot: 0, name: 'batch-1', sAnn: 12, sTot: 12 },
@@ -671,7 +706,8 @@ class Component extends DCLogic {
         { id: 'dx3', folder: 'f3', slot: 1, name: 'line-cam', sAnn: 13, sTot: 13 },
         { id: 'dx4', folder: 'f4', slot: 1, name: 'line-cam', sAnn: 21, sTot: 21 },
         { id: 'dx5', folder: 'f5', slot: 2, name: 'side-01', sAnn: 30, sTot: 30 },
-        { id: 'dx6', folder: 'f6', slot: 2, name: 'side-02', sAnn: 16, sTot: 16 }
+        { id: 'dx6', folder: 'f6', slot: 2, name: 'side-02', sAnn: 16, sTot: 16 },
+        { id: 'dx9', folder: 'f9', slot: 2, name: 'side-03', sAnn: 12, sTot: 12 }
       ],
       images: [
         { id: 'A1', ds: 'd1', name: 'Test Image 1.png', saved: true, boxes: [b('odc1', 0), b('odc1', 1), b('odc2', 0), b('odc3', 0)] },
@@ -679,8 +715,9 @@ class Component extends DCLogic {
         { id: 'A3', ds: 'd1', name: 'Test Image 3.png', saved: false, boxes: [] }
       ],
       exp: { fA: true }, expSlot: { 'fA|0': true },
-      cur: null, activeCls: null, drag: null, sel: {}, step: 'select', groups: [], pool: [],
-      train: { open: false, step: 1, module: '', name: '', desc: '', modErr: false, nameErr: '', descErr: '', sel: [], selErr: false },
+      cur: null, activeCls: null, drag: null, sel: {},
+      wizNeg: { odc2: ['odc4'] }, negMenu: null,
+      train: { open: false, step: 1, module: '', name: '', desc: '', modErr: false, nameErr: '', descErr: '', sel: [], selErr: false, ds: {}, open: {} },
       wiz: ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3'], seq: 10, special: null
     };
   }
@@ -692,7 +729,11 @@ class Component extends DCLogic {
     const t = setTimeout(() => { if (this.state.toast === text) this.setState({ toast: null }); }, 4500);
     this.timers.push(t);
   }
-  fname(f) { return f.classes.map(c => this.N[c]).join(' & '); }
+  // Negative classes are written as "!H" wherever they appear as a label or inside a folder.
+  lbl(c, kind) { return kind === 'neg' ? '!' + this.N[c] : this.N[c] + this.KIND[kind]; }
+  negsOf(f) { const cap = this.state.caps.find(c => c.id === f.cap); return (f.neg || []).concat(cap && cap.neg || []); }
+  fname(f) { const ng = this.negsOf(f); return f.classes.map(c => (ng.indexOf(c) >= 0 ? '!' : '') + this.N[c]).join(' & '); }
+  folderChips(classes, ng) { return classes.map(c => ({ label: (ng.indexOf(c) >= 0 ? '!' : '') + this.N[c], style: this.chipStyle(c, false) })); }
   chipStyle(c, dashed) { const k = this.CL[c]; return 'background:' + k.bg + '; color:' + k.fg + '; border:1px ' + (dashed ? 'dashed' : 'solid') + ' ' + k.bd + ';'; }
   chips(classes) { return classes.map(c => ({ label: this.N[c], style: this.chipStyle(c, false) })); }
   imgsOfCap(s, capId) {
@@ -750,7 +791,7 @@ class Component extends DCLogic {
     const only = cap.absent.filter(a => classes.indexOf(a) < 0 && s.wiz.filter(k => k.split('|').indexOf(a) < 0).length === 1);
     if (s.wiz.indexOf(key) >= 0 && only.length) return 'Only folder without ' + this.N[only[0]];
     const onlyNeg = (cap.neg || []).filter(n => classes.indexOf(n) >= 0 && s.wiz.filter(k => k.split('|').indexOf(n) >= 0).length === 1);
-    if (s.wiz.indexOf(key) >= 0 && onlyNeg.length) return 'Only folder with ' + this.N[onlyNeg[0]];
+    if (s.wiz.indexOf(key) >= 0 && onlyNeg.length) return 'Only folder with !' + this.N[onlyNeg[0]];
     return '';
   }
 
@@ -807,7 +848,7 @@ class Component extends DCLogic {
   }
   openModal() {
     this.mut(s => {
-      s.modal = true; s.sel = {}; s.step = 'select'; s.groups = []; s.pool = [];
+      s.modal = true; s.sel = {};
     });
   }
   closeModal() { this.setState({ modal: false }); }
@@ -819,52 +860,14 @@ class Component extends DCLogic {
       s.sel = {}; if (!all) ids.forEach(id => { s.sel[id] = true; });
     });
   }
-  overlaps(s, a, b) {
-    const A = s.caps.find(c => c.id === a), B = s.caps.find(c => c.id === b);
-    return A.classes.some(x => B.classes.indexOf(x) >= 0);
-  }
   selIds(s) { return s.caps.filter(c => this.selectable(s, c) && s.sel[c.id]).map(c => c.id); }
-  hasOverlap(s) { const ids = this.selIds(s); return ids.some((a, i) => ids.slice(i + 1).some(b => this.overlaps(s, a, b))); }
-  // Default groups = captures linked by shared classes (connected components); a capture with no overlap sits alone.
-  setupAdvanced() {
-    this.mut(s => {
-      const left = this.selIds(s), groups = [];
-      while (left.length) {
-        const g = [left.shift()];
-        for (let i = 0; i < g.length; i++) {
-          for (let j = left.length - 1; j >= 0; j--) if (this.overlaps(s, g[i], left[j])) g.push(left.splice(j, 1)[0]);
-        }
-        groups.push(s.caps.filter(c => g.indexOf(c.id) >= 0).map(c => c.id));
-      }
-      s.groups = groups; s.pool = []; s.step = 'advanced';
-    });
-  }
-  unassign(id) {
-    this.mut(s => {
-      s.groups = s.groups.map(g => g.filter(x => x !== id)).filter(g => g.length);
-      s.pool.push(id);
-    });
-  }
-  assign(id, to) {
-    if (to === '') return;
-    this.mut(s => {
-      s.pool = s.pool.filter(x => x !== id);
-      if (to === 'new') s.groups.push([id]); else s.groups[+to].push(id);
-    });
-  }
-  backToSelect() { this.setState({ step: 'select' }); }
-  runAdvanced() {
-    const n = this.state.groups.length;
-    this.run();
-    this.say('Advanced recommender started for ' + n + (n > 1 ? ' groups' : ' group') + '. You can keep annotating while it runs.');
-  }
   selectable(s, c) { const g = this.group(s, c); return g === 'ready' || g === 'outdated'; }
   run() {
     const ids = this.selIds(this.state);
     if (!ids.length) return;
     this.mut(s => {
       s.caps.forEach(c => { if (ids.indexOf(c.id) >= 0) c.rec = { state: 'running', dirty: null, folders: s.folders.filter(f => f.cap === c.id).map(f => f.id) }; });
-      s.modal = false; s.banner = false; s.step = 'select';
+      s.modal = false; s.banner = false;
     });
     this.say('Recommender started for ' + ids.length + (ids.length > 1 ? ' captures' : ' capture') + '. You can keep annotating while it runs.');
     const secs = this.props.runSeconds ?? 8;
@@ -930,7 +933,7 @@ class Component extends DCLogic {
     const f = s0.folders.find(f => f.cap === 'c2' && (kind === 'absent' ? f.classes.indexOf(cls) < 0 : f.classes.indexOf(cls) >= 0));
     if (!f) return;
     this.mut(s => { this.commitCur(s); s.cur = null; s.screen = 'datasets'; s.modal = false; s.exp[f.id] = true; s.expSlot[f.id + '|0'] = true; });
-    this.say("Upload images to '" + this.fname(f) + "' first: " + this.N[cls] + this.KIND[kind] + ' labels go on its first ' + this.WINDOW + ' images');
+    this.say("Upload images to '" + this.fname(f) + "' first: " + this.lbl(cls, kind) + ' labels go on its first ' + this.WINDOW + ' images');
   }
   pt(e) {
     const r = e.currentTarget.getBoundingClientRect();
@@ -1050,6 +1053,27 @@ class Component extends DCLogic {
     const c = this.classColor(name);
     return 'background-color:' + c + '35; color:' + c + '; border:1px ' + (neg ? 'dashed' : 'solid') + ' ' + c + '70;';
   }
+
+  // Step 3 (Datasets): captures of the selected modules → class folder → time slot → dataset upload.
+  trainTree(s) {
+    const t = s.train;
+    const mods = this.TRAIN_MODULES.filter(m => t.sel.indexOf(m.id) >= 0);
+    const normal = {}; mods.forEach(m => m.classes.forEach(c => { normal[c] = normal[c] || []; normal[c].push(m); }));
+    const capIds = { 'capture 3': 'c3', 'capture 4': 'c4' };
+    const capNames = mods.map(m => m.capture).filter((x, i, a) => a.indexOf(x) === i);
+    return capNames.map(cn => {
+      const cap = s.caps.find(c => c.id === capIds[cn]);
+      const roots = s.folders.filter(f => f.cap === cap.id).map(f => {
+        const ng = this.negsOf(f);
+        const clash = ng.filter(c => normal[c]);
+        const why = clash.length ? this.N[clash[0]] + ' is a negative class in this folder, but ' + normal[clash[0]].map(m => m.name + ' (' + m.capture + ')').join(' and ') + (normal[clash[0]].length > 1 ? ' train' : ' trains') + ' it as a normal class.' : '';
+        const slots = this.SLOTS.map((label, si) => ({ label: label, si: si, dss: s.datasets.filter(d => d.folder === f.id && d.slot === si) })).filter(x => x.dss.length);
+        return { f: f, ng: ng, why: why, slots: slots };
+      });
+      return { cap: cap, roots: roots };
+    });
+  }
+  dsValid(d) { return !!d.sTot && d.sAnn === d.sTot; }
   goTraining() { this.mut(s => { s.screen = 'training'; s.modal = false; s.train = this.initial().train; }); }
   goDatasets() { this.mut(s => { s.screen = 'datasets'; s.train.open = false; }); }
   setTrain(fn) { this.mut(s => fn(s.train)); }
@@ -1087,7 +1111,7 @@ class Component extends DCLogic {
         const open = !!s.exp[f.id];
         const hasNum = f.rec != null;
         out.push(Object.assign({}, base, {
-          isFolder: true, variant: cap.variant, capture: cap.name, name: this.fname(f), chips: this.chips(f.classes),
+          isFolder: true, variant: cap.variant, capture: cap.name, name: this.fname(f), chips: this.folderChips(f.classes, this.negsOf(f)),
           toggle: () => this.toggleFolder(f.id), chevRot: open ? 'transform: rotate(90deg);' : '', expanded: open ? 'true' : 'false', expLabel: (open ? 'Collapse ' : 'Expand ') + this.fname(f),
           recDash: rec.state === 'none' || (rec.state === 'generated' && !hasNum),
           recNum: rec.state === 'generated' && hasNum, recRun: rec.state === 'running',
@@ -1151,7 +1175,7 @@ class Component extends DCLogic {
           clsChips: c.classes.map(x => {
             const d = r.defs.find(y => y.cls === x && y.kind === 'present');
             return { text: this.N[x] + (d ? ' · ' + d.n + ' more' : ''), style: this.chipStyle(x, false) };
-          }).concat(r.defs.filter(d => d.kind !== 'present').map(d => ({ text: this.N[d.cls] + this.KIND[d.kind] + ' · ' + d.n + ' more', style: this.chipStyle(d.cls, true) }))),
+          }).concat(r.defs.filter(d => d.kind !== 'present').map(d => ({ text: this.lbl(d.cls, d.kind) + ' · ' + d.n + ' more', style: this.chipStyle(d.cls, true) }))),
           canAnnotate: g === 'notready' && !!c.live, annotate: () => this.annotateCap(c.id)
         };
       });
@@ -1214,30 +1238,100 @@ class Component extends DCLogic {
         cbClass: 'fv-cb' + (on ? ' on' : ''), tipClass: 'fv-tip' + (why ? ' off' : ''), cbLabel: 'Select ' + m.name + ' (' + m.capture + ')',
         toggle: () => this.setTrain(x => { x.selErr = false; x.sel = on ? x.sel.filter(i => i !== m.id) : x.sel.concat([m.id]); }),
         classes: m.classes.map(c => ({ name: this.N[c], style: this.clsChipStyle(this.N[c], false), title: '' }))
+          .concat(m.neg.map(c => ({ name: this.N[c] + ' · negative', style: this.clsChipStyle(this.N[c], true), title: 'Negative class' })))
       };
     });
     v.tBack2 = () => this.setTrain(x => { x.sel = []; x.step = 1; });
-    v.tNext2 = () => { if (!t.sel.length) { this.setTrain(x => { x.selErr = true; }); return; } this.say('Datasets step is not part of this prototype'); };
+    // step 3
+    v.tStep3 = t.step === 3;
+    v.tNext2 = () => { if (!t.sel.length) { this.setTrain(x => { x.selErr = true; }); return; } this.setTrain(x => { x.step = 3; x.ds = {}; x.open = {}; }); };
+    v.tBack3 = () => this.setTrain(x => { x.step = 2; });
+    const tree = t.step === 3 ? this.trainTree(s) : [];
+    const st = (all, some) => all ? 'checked' : (some ? 'partial' : 'unchecked');
+    const cbv = (state, disabled, label, toggle) => ({ cbClass: 'fv-3cb ' + state, aria: state === 'checked' ? 'true' : (state === 'partial' ? 'mixed' : 'false'), isChecked: state === 'checked', isPartial: state === 'partial', disabled: !!disabled, cbLabel: label, toggle: toggle });
+    const cnt = (a, n) => ({ count: a + '/' + n, countStyle: 'color:' + (a > 0 ? (a === n ? 'green' : 'yellow') : 'red') + ';' });
+    const setSel = (capId, ids, on) => this.setTrain(x => { const cur = new Set(x.ds[capId] || []); ids.forEach(id => on ? cur.add(id) : cur.delete(id)); x.ds[capId] = Array.from(cur); });
+    const flip = key => this.setTrain(x => { x.open[key] = !x.open[key]; });
+    let anySel = false, allSel = true, anySelectable = false; const allPick = {};
+    v.tCaps = tree.map(cc => {
+      const capId = cc.cap.id, sel = t.ds[capId] || [];
+      const validIds = []; cc.roots.forEach(r => { if (!r.why) r.slots.forEach(sl => sl.dss.forEach(d => { if (this.dsValid(d)) validIds.push(d.id); })); });
+      allPick[capId] = validIds;
+      if (validIds.length) anySelectable = true;
+      if (sel.length) anySel = true;
+      if (!validIds.every(id => sel.indexOf(id) >= 0)) allSel = false;
+      const capAll = validIds.length > 0 && validIds.every(id => sel.indexOf(id) >= 0);
+      const capOpen = t.open[capId] !== false;
+      return Object.assign(cbv(st(capAll, sel.length > 0), validIds.length === 0, 'Select all datasets in ' + cc.cap.name, () => setSel(capId, validIds, !capAll)), {
+        variant: cc.cap.variant, capture: cc.cap.name, open: capOpen, rot: capOpen ? 'transform: rotate(180deg)' : '',
+        toggleOpen: () => this.setTrain(x => { x.open[capId] = !capOpen; }),
+        roots: cc.roots.map(r => {
+          const ids = []; let a = 0, n = 0;
+          r.slots.forEach(sl => sl.dss.forEach(d => { a += d.sAnn || 0; n += d.sTot || 0; if (this.dsValid(d)) ids.push(d.id); }));
+          const all = !r.why && ids.length > 0 && ids.every(id => sel.indexOf(id) >= 0), some = r.slots.some(sl => sl.dss.some(d => sel.indexOf(d.id) >= 0));
+          const key = capId + '|' + r.f.id, open = !r.why && !!t.open[key];
+          return Object.assign(cbv(st(all, some), !!r.why, 'Select ' + this.fname(r.f), () => { if (!r.why) setSel(capId, ids, !all); }), cnt(a, n), {
+            why: r.why, canOpen: !r.why, open: open, rot: open ? 'transform: rotate(180deg)' : '', cursor: r.why ? 'cursor: default;' : 'cursor: pointer;',
+            toggleOpen: () => { if (!r.why) flip(key); },
+            chips: r.f.classes.filter(c => r.ng.indexOf(c) < 0).map(c => ({ name: this.N[c], style: this.clsChipStyle(this.N[c], false), title: '' }))
+              .concat(r.ng.filter(c => r.f.classes.indexOf(c) >= 0).map(c => ({ name: this.N[c] + ' · negative', style: this.clsChipStyle(this.N[c], true), title: 'Negative class' }))),
+            slots: r.slots.map(sl => {
+              const sids = sl.dss.filter(d => this.dsValid(d)).map(d => d.id); let sa = 0, sn = 0; sl.dss.forEach(d => { sa += d.sAnn || 0; sn += d.sTot || 0; });
+              const sAll = sids.length > 0 && sl.dss.every(d => sel.indexOf(d.id) >= 0), sSome = sl.dss.some(d => sel.indexOf(d.id) >= 0);
+              const skey = key + '|' + sl.si, sopen = !!t.open[skey];
+              return Object.assign(cbv(st(sAll, sSome), false, 'Select ' + sl.label, () => setSel(capId, sids, !sAll)), cnt(sa, sn), {
+                name: sl.label, open: sopen, rot: sopen ? 'transform: rotate(180deg)' : '', toggleOpen: () => flip(skey),
+                folders: sl.dss.map(d => Object.assign(cbv(sel.indexOf(d.id) >= 0 ? 'checked' : 'unchecked', !this.dsValid(d), 'Select ' + d.name, () => setSel(capId, [d.id], sel.indexOf(d.id) < 0)), cnt(d.sAnn || 0, d.sTot || 0), { name: d.name }))
+              });
+            })
+          });
+        })
+      });
+    });
+    const allState = anySelectable && allSel ? 'checked' : (anySel ? 'partial' : 'unchecked');
+    v.tAll = cbv(allState, false, 'Select all datasets', () => this.setTrain(x => { Object.keys(allPick).forEach(k => { x.ds[k] = allState === 'checked' ? [] : allPick[k].slice(); }); }));
+    const missing = tree.some(cc => !(t.ds[cc.cap.id] || []).length);
+    v.tNext3Disabled = missing; v.tNext3Why = missing ? 'Select at least one dataset for each Capture' : '';
+    v.tNext3 = () => this.say('Model Configuration step is not part of this prototype');
+
 
     // wizard
     const c2 = s.caps.find(c => c.id === 'c2');
+    // Negative classes: any project class except the capture's own detection classes.
+    const ALL = ['odc1', 'odc2', 'odc3', 'odc4', 'clsD', 'clsE', 'clsF', 'clsG'];
     v.classRows = ['odc2', 'odc1', 'odc3'].map(c => {
-      const negs = (c2.neg || []).filter(n => c2.negOf[n] === c);
-      return { name: this.N[c], absent: c2.absent.indexOf(c) >= 0, absentLabel: 'Absent case for ' + this.N[c], hasNeg: negs.length > 0, noNeg: negs.length === 0, negChips: this.chips(negs) };
+      const negs = s.wizNeg[c] || [], open = s.negMenu === c;
+      return {
+        name: this.N[c], absent: c2.absent.indexOf(c) >= 0, absentLabel: 'Absent case for ' + this.N[c],
+        hasNeg: negs.length > 0, noNeg: negs.length === 0, negChips: negs.map(n => ({ label: '!' + this.N[n], style: this.chipStyle(n, false) })),
+        menuOpen: open ? 'true' : 'false', menuOpenB: open, menuLabel: 'Negative classes for ' + this.N[c],
+        toggleMenu: () => this.setState({ negMenu: open ? null : c }),
+        options: ALL.filter(o => o !== c).map(o => {
+          const det = c2.classes.indexOf(o) >= 0, on = negs.indexOf(o) >= 0;
+          return {
+            name: this.N[o], checkedB: on, selected: on ? 'true' : 'false', disabled: det, disabledAttr: det ? 'true' : 'false',
+            why: this.N[o] + ' is a detection class in this capture, so it can’t be a negative class.',
+            tipClass: det ? 'tip' : '', style: det ? 'color:#A1A1AA; cursor:not-allowed;' : 'color:#18181B; cursor:pointer;',
+            pick: () => { if (det) return; this.mut(st => { const l = st.wizNeg[c] || []; st.wizNeg[c] = on ? l.filter(x => x !== o) : l.concat([o]); }); }
+          };
+        })
+      };
     });
-    const negNames = (c2.neg || []).map(n => this.N[n]);
+    const negNames = Object.keys(s.wizNeg).reduce((a, k) => a.concat(s.wizNeg[k]), []).filter((x, i, a) => a.indexOf(x) === i).map(n => '!' + this.N[n]);
     const list = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a[0] || '';
     v.hasNegNote = negNames.length > 0;
-    v.negNote = list(negNames) + (negNames.length > 1 ? ' are' : ' is') + ' set as a negative class here. A class can’t be both normal and negative in one training job, so a module with '
-      + list(negNames) + ' as a negative class can’t be trained together with a module where ' + (negNames.length > 1 ? 'they are' : 'it is') + ' a normal class.';
+    const many = negNames.length > 1;
+    v.negNote = list(negNames) + (many ? ' are set as negative classes' : ' is set as a negative class') + ' here. A class can’t be both normal and negative in one training job, so a module with '
+      + list(negNames) + (many ? ' as negative classes' : ' as a negative class') + ' can’t be trained together with a module where ' + (many ? 'they are normal classes.' : 'it is a normal class.');
     v.wizFolders = s.wiz.map(k => {
       const lock = this.wizLock(s, k);
-      return { name: k.split('|').map(c => this.N[c]).join(' & '), chips: this.chips(k.split('|')), locked: !!lock, lockReason: lock || 'Remove folder', delLabel: 'Remove folder ' + k.split('|').map(c => this.N[c]).join(' & '), del: () => this.toggleWiz(k) };
+      const wn = k.split('|').map(c => ((c2.neg || []).indexOf(c) >= 0 ? '!' : '') + this.N[c]).join(' & ');
+      return { name: wn, chips: this.folderChips(k.split('|'), c2.neg || []), locked: !!lock, lockReason: lock || 'Remove folder', delLabel: 'Remove folder ' + wn, del: () => this.toggleWiz(k) };
     });
     v.wizCombos = this.COMBOS.map((k, i) => {
       const checked = s.wiz.indexOf(k) >= 0;
       const lock = checked ? this.wizLock(s, k) : '';
-      return { id: 'combo-' + i, chips: this.chips(k.split('|')), checked: checked, locked: !!lock, lockReason: lock, toggle: () => this.toggleWiz(k) };
+      return { id: 'combo-' + i, chips: this.folderChips(k.split('|'), c2.neg || []), checked: checked, locked: !!lock, lockReason: lock, toggle: () => this.toggleWiz(k) };
     });
     v.prevStep = () => this.prevStep(); v.finish = () => this.finish();
 
@@ -1263,29 +1357,9 @@ class Component extends DCLogic {
     v.runDisabled = selN === 0;
     v.runStyle = selN ? 'background:#FF4A00; color:#FFFFFF; cursor:pointer;' : 'background:#E4E4E7; color:#A1A1AA; cursor:not-allowed;';
     v.run = () => this.run(); v.closeModal = () => this.closeModal();
-    v.modalTitle = s.step === 'advanced' ? 'Advanced Mode' : 'Run Data Recommender';
-    v.modalSub = s.step === 'advanced' ? 'Captures in a group are combined into one recommendation.' : 'Runs per capture and takes a few minutes. You can keep annotating while it runs.';
-    v.isSelect = s.step === 'select'; v.isAdvanced = s.step === 'advanced';
-    v.showAdvanced = selN > 1 && this.hasOverlap(s);
-    v.setupAdvanced = () => this.setupAdvanced(); v.backToSelect = () => this.backToSelect(); v.runAdvanced = () => this.runAdvanced();
-    const capLine = id => { const c = s.caps.find(x => x.id === id); return { name: c.variant + ' · ' + c.name, chips: this.chips(c.classes) }; };
-    v.advGroups = s.groups.map((g, gi) => {
-      const shared = s.caps.find(c => c.id === g[0]).classes.filter(x => g.every(id => s.caps.find(c => c.id === id).classes.indexOf(x) >= 0));
-      const linked = g.length > 1 && g.every(a => g.some(b => b !== a && this.overlaps(s, a, b)));
-      return {
-        title: 'Group ' + (gi + 1),
-        note: g.length === 1 ? 'Runs on its own' : (linked ? (shared.length ? 'Shared: ' + shared.map(x => this.N[x]).join(', ') : 'Linked by overlapping classes') : 'Some captures share no classes'),
-        noteStyle: g.length > 1 && !linked ? 'color:#B45309;' : 'color:#71717A;',
-        members: g.map(id => Object.assign(capLine(id), { remove: () => this.unassign(id), removeLabel: 'Unassign ' + capLine(id).name }))
-      };
-    });
-    v.hasPool = s.pool.length > 0;
-    v.pool = s.pool.map(id => Object.assign(capLine(id), {
-      options: s.groups.map((g, gi) => ({ value: String(gi), label: 'Group ' + (gi + 1) })).concat([{ value: 'new', label: 'New group' }]),
-      pick: e => this.assign(id, e.target.value), pickLabel: 'Assign ' + capLine(id).name + ' to a group'
-    }));
-    v.allAssigned = s.step === 'advanced' && s.pool.length === 0;
-    v.advText = s.pool.length ? s.pool.length + ' unassigned' : s.groups.length + (s.groups.length > 1 ? ' groups' : ' group') + ' · ' + this.selIds(s).length + ' captures';
+    v.modalTitle = 'Run Data Recommender';
+    v.modalSub = 'Runs per capture and takes a few minutes. You can keep annotating while it runs.';
+    v.isSelect = true;
 
     // annotation
     const ctx = s.screen === 'annotate' ? this.curCtx(s) : null;
@@ -1299,7 +1373,7 @@ class Component extends DCLogic {
     v.down = (e) => this.down(e); v.move = (e) => this.move(e); v.up = () => this.up();
     if (ctx) {
       const img = ctx.img, folder = ctx.folder, cap = ctx.cap;
-      v.folderName = this.fname(folder); v.dsName = ctx.ds.name; v.imgName = img.name; v.folderChips = this.chips(folder.classes);
+      v.folderName = this.fname(folder); v.dsName = ctx.ds.name; v.imgName = img.name; v.folderChips = this.folderChips(folder.classes, this.negsOf(folder));
       v.hasOdc2 = folder.classes.indexOf('odc2') >= 0; v.hasOdc3 = folder.classes.indexOf('odc3') >= 0; v.hasOdc4 = folder.classes.indexOf('odc4') >= 0;
       // Recommender-only chips (absent / negative): shown only on the first WINDOW eligible images of
       // the capture. The count includes this image's unsaved boxes so it moves as the user draws.
@@ -1316,7 +1390,7 @@ class Component extends DCLogic {
         const sp = s.special; const on = !!sp && sp.cls === c && sp.kind === kind;
         const border = kind === 'absent' ? 'dashed' : 'dotted';
         return {
-          label: this.N[c] + this.KIND[kind] + '  ' + Math.min(have, need) + '/' + need, needed: short,
+          label: this.lbl(c, kind) + '  ' + Math.min(have, need) + '/' + need, needed: short,
           info: 'Minimum ' + need + ' instances of this class need to be mapped for Data Recommender to run for this capture',
           pick: () => this.markSpecial(c, kind), pressed: on ? 'true' : 'false',
           title: (kind === 'absent' ? 'Box where ' + this.N[c] + ' would normally sit. ' : 'Box each ' + this.N[c] + ' on the image. ') + (short ? need + ' needed in this capture to run the recommender. ' : 'Requirement met; more are optional. ') + 'Recommender only: not used for training and never blocks saving.',
@@ -1331,14 +1405,14 @@ class Component extends DCLogic {
         return { label: this.N[c], pick: () => this.pick(c), pressed: on ? 'true' : 'false', style: this.chipStyle(c, false) + (on ? ' box-shadow: 0 0 0 2px ' + this.CL[c].box + '; font-weight: 700;' : '') };
       });
       const lineOf = (kind) => kind === 'absent' ? 'dashed' : (kind === 'neg' ? 'dotted' : 'solid');
-      v.boxList = img.boxes.map((x, i) => ({ num: i + 1, label: this.N[x.cls] + this.KIND[this.kindOf(x)], style: this.chipStyle(x.cls, this.kindOf(x) !== 'present'), del: () => this.delBox(i), delLabel: 'Delete label ' + (i + 1) }));
+      v.boxList = img.boxes.map((x, i) => ({ num: i + 1, label: this.lbl(x.cls, this.kindOf(x)), style: this.chipStyle(x.cls, this.kindOf(x) !== 'present'), del: () => this.delBox(i), delLabel: 'Delete label ' + (i + 1) }));
       v.noBoxes = img.boxes.length === 0;
       v.boxes = img.boxes.map((x, i) => {
         const col = this.CL[x.cls].box; const kind = this.kindOf(x); const special = kind !== 'present';
         const pos = x.t < 8 ? 'top: 2px; left: 2px;' : 'top: -22px; left: -2px;';
         return {
           style: 'left:' + x.l + '%; top:' + x.t + '%; width:' + x.w + '%; height:' + x.h + '%; border:' + (kind === 'neg' ? 3 : 2) + 'px ' + lineOf(kind) + ' ' + col + ';' + (special ? ' background: rgba(255,255,255,0.10);' : ''),
-          text: (i + 1) + '. ' + this.N[x.cls] + this.KIND[kind],
+          text: (i + 1) + '. ' + this.lbl(x.cls, kind),
           labelStyle: pos + (special ? ' background:#FFFFFF; color:' + col + '; border:1px ' + lineOf(kind) + ' ' + col + ';' : ' background:' + col + '; color:#FFFFFF;')
         };
       });
@@ -1359,7 +1433,7 @@ class Component extends DCLogic {
         const nm = this.N[s.special.cls];
         v.hintText = s.special.kind === 'absent'
           ? 'Marking ' + nm + ' · absent: drag a box where ' + nm + ' would normally sit. Recommender only, stripped from training.'
-          : 'Marking ' + nm + ' · negative: drag a box around each ' + nm + '. Recommender only, stripped from training.';
+          : 'Marking !' + nm + ': drag a box around each ' + nm + '. Recommender only, stripped from training.';
         v.hintStyle = 'background:#EEF0FF; color:#33308F; border:1px ' + (s.special.kind === 'absent' ? 'dashed' : 'dotted') + ' #7B78D6;';
       } else if (s.activeCls) {
         v.hintText = 'Drawing ' + this.N[s.activeCls] + ': drag on the image to add a box';
