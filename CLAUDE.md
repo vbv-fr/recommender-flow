@@ -31,7 +31,7 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
    - Copy Master Image Annotation skips them. It also skips classes not in the target folder, and keeps the target image's existing recommender-only boxes.
 8. **No label-status panel** in the annotation tool. Readiness lives only in the Run Recommender popup.
 9. **Run Recommender button.** It sits top right, is always clickable, and carries an "N ready" pill. The popup is a table: checkbox | Capture | Status | Classes. Classes shows each class chip; when short, the chip gets a "· N more" suffix, and short absent/negative labels follow as dashed chips ("C · absent · 3 more"). Status: Ready to run, Outdated + reason, Missing classes (no Annotate link), Running, Up to date. Only Ready and Outdated rows can be ticked; nothing is pre-ticked; the header checkbox selects all. "Run Recommender" (footer button) is disabled until a box is ticked and runs the standard recommender. Runs are async: minutes in reality, 8 s here (override with `?run=N`). There is no cancel.
-   - **Advanced Mode.** When 2+ ticked captures include at least one pair sharing a class, a "Setup Advanced Mode" button (with an ⓘ tooltip: "Gives optimised recommendation counts by combining captures with overlapping classes") appears left of Run Recommender. It opens a second step: captures are pre-grouped by shared classes (connected components; a capture with no overlap is its own group). × unassigns a capture into an "Unassigned" tray; an "Assign to…" dropdown puts it into an existing group or a new one. Empty groups vanish. A group whose captures don't all overlap shows an amber "Some captures share no classes" note (not blocking). "Run Advanced Mode" appears only when nothing is unassigned.
+   - **Advanced Mode.** When 2+ ticked captures include at least one pair sharing a class, a "Setup Advanced Mode" button (with an ⓘ tooltip: "Gives optimised recommendations by combining captures with overlapping classes") appears left of Run Recommender. It opens a second step: captures are pre-grouped by shared classes (connected components; a capture with no overlap is its own group). × unassigns a capture into an "Unassigned" tray; an "Assign to…" dropdown puts it into an existing group or a new one. Empty groups vanish. A group whose captures don't all overlap shows an amber "Some captures share no classes" note (not blocking). "Run Advanced Mode" appears only when nothing is unassigned.
 10. **Recommended column, per folder.** It shows one of:
     - "—" when not run
     - a spinner with "Running"
@@ -39,7 +39,8 @@ A redesign of recipe creation in Frinks Vision, an industrial computer-vision pl
     - the number greyed and struck through, with an "Outdated" tag
 
     A capture becomes Outdated when folders are added or removed, or class config changes. If the tree changes during a run, the result lands as Outdated. Adding images or annotations does NOT outdate it. The Annotated column is unchanged.
-11. **Step 2 guards.** You can't remove:
+11. **Negative-class note.** When any class has a negative class set, Define Class Properties shows an amber Note (above "Define Mutually Exclusive Classes") naming the negative class(es) and stating the training rule: a module with that class as negative can't be trained in the same job as a module where it is normal.
+12. **Step 2 guards.** You can't remove:
     - a folder that has uploaded images
     - the only folder without an absent class
     - the only folder with a negative class
