@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recommender flow prototype</title>
+<meta name="description" content="Clickable prototype: recipe flow ending at Dataset Folders, recommender-only absent and negative labels on Datasets &amp; Annotations, and the Run Recommender popup.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23FF4A00'/%3E%3Cpath d='M9 22l5-6 4 4 5-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#fff}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#D63F00}a:hover{color:#A83200}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:13px;height:13px;border:2px solid #F6C9B4;border-top-color:#FF4A00;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;flex:none}
+.chip{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.ibtn{background:none;border:0;padding:6px;cursor:pointer;color:#52525B;display:inline-flex;align-items:center;justify-content:center;border-radius:6px}
+.ibtn:hover{background:#F4F4F5}
+.ibtn:disabled{color:#CFCFD4;cursor:not-allowed;background:none}
+.link{background:none;border:0;padding:0;color:#D63F00;font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.pbtn{height:28px;padding:0 10px;border:1px solid #C9C9CF;background:#fff;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:#3F3F46}
+.pbtn:hover{border-color:#FF4A00;color:#C23A00}
+.trow:hover{background:#FFF8F4}
+.qr{background-color:#fff;background-image:repeating-linear-gradient(0deg,#1f1f1f 0 4px,transparent 4px 9px),repeating-linear-gradient(90deg,#1f1f1f 0 4px,transparent 4px 10px)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="dc-template">
+<div style="position: relative; min-height: 900px; background: #FFFFFF; font-family: 'Quicksand', 'Segoe UI', sans-serif; color: #1D1D1F; font-weight: 500">
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 16px; background: #F4F4F5; border-bottom: 1px dashed #B8B8BE; font-size: 12px; color: #52525B">
+<span style="font-weight: 700; letter-spacing: 0.06em">PROTOTYPE CONTROLS</span>
+<button class="pbtn" onClick="{{fillReady}}">Fill capture 2 to ready</button>
+<sc-if value="{{isAnnot}}" hint-placeholder-val="{{false}}"><button class="pbtn" onClick="{{autoLabel}}">Auto-label this image</button></sc-if>
+<button class="pbtn" onClick="{{reset}}">Reset</button>
+<span>Recommender runs take {{runSecs}} s here (real runs take a few minutes)</span>
+</div>
+
+<sc-if value="{{isWizard}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; min-height: 860px">
+<nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 24px; font-size: 13px; color: #3F3F46">
+<span>Home</span><span style="color: #A1A1AA">›</span><span>Test Project</span><span style="color: #A1A1AA">›</span><span>Recipe Management</span><span style="color: #A1A1AA">›</span><span>variant 1</span><span style="color: #A1A1AA">›</span><span>capture 2</span><span style="color: #A1A1AA">›</span><span style="font-weight: 700; color: #18181B">Module Configuration</span>
+</nav>
+<div style="flex: 1; padding: 12px 16px 32px; display: flex; justify-content: center">
+<div style="width: 100%; max-width: 1270px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600; padding-bottom: 12px; border-bottom: 1px solid #D4D4D8">Define Class Properties</h2>
+<div style="overflow-x: auto">
+<div style="min-width: 640px">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #FF4A00; color: #FFFFFF; font-weight: 700; font-size: 14px; min-height: 46px; align-items: center; text-align: center">
+<div>Class Name</div><div>Negative Classes</div><div>Absent Case</div>
+</div>
+<sc-for list="{{classRows}}" as="c" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 46px; align-items: center; text-align: center; border-bottom: 1px solid #EFEFF1; font-size: 14px">
+<div>{{c.name}}</div>
+<div style="display: flex; justify-content: center"><span style="display: inline-flex; align-items: center; justify-content: space-between; gap: 12px; height: 32px; padding: 0 10px; border: 1px solid #E4E4E7; border-radius: 6px; color: #A1A1AA; font-size: 13px; min-width: 180px"><sc-if value="{{c.noNeg}}" hint-placeholder-val="{{true}}">Select negative classes</sc-if><sc-if value="{{c.hasNeg}}" hint-placeholder-val="{{false}}"><span style="display: inline-flex; gap: 4px"><sc-for list="{{c.negChips}}" as="ch"><span class="chip" style="height: 22px; {{ch.style}}">{{ch.label}}</span></sc-for></span></sc-if> <span aria-hidden="true">▾</span></span></div>
+<div style="display: flex; justify-content: center"><input type="checkbox" checked="{{c.absent}}" disabled="{{true}}" aria-label="{{c.absentLabel}}" style="width: 18px; height: 18px; accent-color: #FF4A00; margin: 0"></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 0 10px">
+<a href="#" style="font-size: 13px">Define Mutually Exclusive Classes</a>
+<span style="display: inline-flex; align-items: center; height: 32px; padding: 0 20px; background: #D4D4D8; color: #71717A; border-radius: 4px; font-size: 13px; font-weight: 600">Saved</span>
+</div>
+
+<h2 style="margin: 0; font-size: 17px; font-weight: 600; padding-bottom: 12px; border-bottom: 1px solid #D4D4D8">Create Dataset Folders</h2>
+<p style="margin: 0; font-size: 13px; color: #52525B">Select values from Possible Combinations to create Dataset Folders</p>
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<section style="flex: 1 1 420px; min-width: 0; border: 1px solid #E4E4E7; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<h3 style="margin: 0; font-size: 15px; font-weight: 700">Dataset Combinations</h3>
+<p style="margin: 0; font-size: 13px; color: #52525B">Each dataset combination represents a folder containing images of certain classes.</p>
+<div style="border: 1px solid #EFEFF1">
+<div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr) 48px; background: #FF4A00; color: #FFFFFF; font-weight: 700; font-size: 14px; min-height: 44px; align-items: center">
+<div style="padding: 0 16px">Folder Name</div><div style="text-align: center">Classes</div><div></div>
+</div>
+<sc-for list="{{wizFolders}}" as="f" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr) 48px; min-height: 52px; align-items: center; border-bottom: 1px solid #EFEFF1">
+<div style="padding: 0 12px"><span style="display: inline-flex; align-items: center; height: 32px; padding: 0 10px; border: 1px solid #E4E4E7; border-radius: 6px; background: #FAFAFA; font-size: 13px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{f.name}}</span></div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 6px"><sc-for list="{{f.chips}}" as="ch"><span class="chip" style="{{ch.style}}">{{ch.label}}</span></sc-for></div>
+<div><button class="ibtn" disabled="{{f.locked}}" title="{{f.lockReason}}" aria-label="{{f.delLabel}}" onClick="{{f.del}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path></svg></button></div>
+</div>
+</sc-for>
+</div>
+</section>
+<section style="flex: 1 1 420px; min-width: 0; border: 1px solid #E4E4E7; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<h3 style="margin: 0; font-size: 15px; font-weight: 700">Possible Combinations</h3>
+<p style="margin: 0; font-size: 13px; color: #52525B">All possible combinations of classes that can be created.</p>
+<div style="border: 1px solid #EFEFF1">
+<div style="display: flex; justify-content: center; background: #FF4A00; color: #FFFFFF; font-weight: 700; font-size: 14px; min-height: 44px; align-items: center">Classes</div>
+<sc-for list="{{wizCombos}}" as="k" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 12px; border-bottom: 1px solid #EFEFF1">
+<input type="checkbox" id="{{k.id}}" checked="{{k.checked}}" disabled="{{k.locked}}" onChange="{{k.toggle}}" style="width: 18px; height: 18px; accent-color: #FF4A00; margin: 0; flex: none">
+<label for="{{k.id}}" style="flex: 1; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center"><sc-for list="{{k.chips}}" as="ch"><span class="chip" style="{{ch.style}}">{{ch.label}}</span></sc-for></label>
+<span style="font-size: 11px; color: #71717A; min-width: 130px; text-align: right">{{k.lockReason}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+</div>
+</div>
+</div>
+<div style="border-top: 1px solid #D4D4D8; padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px">
+<button aria-label="Previous step" onClick="{{prevStep}}" style="width: 40px; height: 36px; border: 1px solid #FF4A00; color: #FF4A00; background: #FFFFFF; border-radius: 6px; cursor: pointer; font-size: 16px">←</button>
+<div style="display: inline-flex; align-items: center; gap: 12px; height: 36px; padding: 0 16px; border: 1px solid #E4E4E7; border-radius: 999px; font-size: 13px">
+<span aria-hidden="true" style="display: inline-flex; gap: 5px"><span style="width: 7px; height: 7px; border-radius: 50%; background: #FF4A00"></span><span style="width: 7px; height: 7px; border-radius: 50%; background: #FF4A00"></span></span>
+<span style="color: #52525B">2 of 2</span><span style="font-weight: 700">Dataset Folders</span>
+</div>
+<button onClick="{{finish}}" style="height: 36px; padding: 0 22px; border: 0; background: #FF4A00; color: #FFFFFF; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer">Finish</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isDatasets}}" hint-placeholder-val="{{false}}">
+<div style="padding: 0 24px 40px; display: flex; flex-direction: column; gap: 16px">
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 10px; padding-top: 16px; font-size: 13px; color: #3F3F46">
+<span>Home</span><span style="color: #A1A1AA">›</span><span>Test Project</span><span style="color: #A1A1AA">›</span><span style="font-weight: 700; color: #18181B">Datasets &amp; Annotations</span>
+</nav>
+<sc-if value="{{showBanner}}" hint-placeholder-val="{{false}}">
+<div role="status" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid #F6C7AE; background: #FFF6F1; border-radius: 10px; font-size: 13px; color: #3F3F46">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+<strong style="font-weight: 700; color: #18181B">Folders for capture 2 are ready</strong>
+<span>Upload images into each folder and annotate them. Once every class has 5 labels, each absent class 3 absent labels and each negative class 5 negative labels, run the recommender from the top right.</span>
+</div>
+<button class="ibtn" aria-label="Dismiss" onClick="{{dismissBanner}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{filters}}" as="fl" hint-placeholder-count="4">
+<button style="position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 0; background: #FFFFFF; font-size: 13px; font-weight: 600; color: #27272A; cursor: pointer">{{fl.label}} <span aria-hidden="true">▾</span><span style="position: absolute; top: 0; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #FF4A00; color: #FFFFFF; font-size: 10px; display: inline-flex; align-items: center; justify-content: center">{{fl.n}}</span></button>
+</sc-for>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<sc-if value="{{anyRunning}}" hint-placeholder-val="{{false}}"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #C23A00; font-weight: 600"><span class="spin"></span>{{runningText}}</span></sc-if>
+<button onClick="{{openModal}}" style="height: 40px; padding: 0 10px 0 16px; background: #FF4A00; color: #FFFFFF; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 10px; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"></path></svg>
+Run Recommender
+<span style="border-radius: 999px; padding: 2px 9px; font-size: 12px; {{readyPillStyle}}">{{readyText}}</span>
+</button>
+</div>
+</div>
+
+<div style="overflow-x: auto; border: 1px solid #EFEFF1; border-radius: 4px">
+<div style="min-width: 1260px">
+<div style="display: grid; grid-template-columns: 110px 130px minmax(250px, 1.6fr) minmax(200px, 1.2fr) 160px 110px 120px 120px 70px; background: #FF4A00; color: #FFFFFF; font-weight: 700; font-size: 14px; min-height: 52px; align-items: center; text-align: center">
+<div>Variant</div><div>Capture</div><div>Folder</div><div>Class coverage</div><div>Recommended</div><div>Annotated</div><div>Date created</div><div>Date modified</div><div>Action</div>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<div class="trow" style="display: grid; grid-template-columns: 110px 130px minmax(250px, 1.6fr) minmax(200px, 1.2fr) 160px 110px 120px 120px 70px; align-items: center; min-height: 44px; border-bottom: 1px solid #EFEFF1; font-size: 14px; {{r.bg}}">
+<div style="text-align: center">{{r.variant}}</div>
+<div style="text-align: center">{{r.capture}}</div>
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 12px 4px {{r.indent}}px">
+<sc-if value="{{r.isFolder}}" hint-placeholder-val="{{true}}"><button class="ibtn" onClick="{{r.toggle}}" aria-expanded="{{r.expanded}}" aria-label="{{r.expLabel}}"><span style="display: inline-flex; transition: transform .15s; {{r.chevRot}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></span></button><span style="font-weight: 600">{{r.name}}</span></sc-if>
+<sc-if value="{{r.isSlot}}" hint-placeholder-val="{{false}}"><button class="ibtn" onClick="{{r.toggle}}" aria-expanded="{{r.expanded}}" aria-label="{{r.expLabel}}"><span style="display: inline-flex; transition: transform .15s; {{r.chevRot}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></span></button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span>{{r.name}}</span></sc-if>
+<sc-if value="{{r.isDs}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E25000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6v18h12V7z"></path><path d="M14 3v4h4"></path></svg><span style="color: #2F55C9">{{r.name}}</span><sc-if value="{{r.hasImgs}}" hint-placeholder-val="{{true}}"><button class="link" style="font-size: 13px" onClick="{{r.open}}">View Annotations</button></sc-if></sc-if>
+<sc-if value="{{r.isAdd}}" hint-placeholder-val="{{false}}"><button onClick="{{r.add}}" style="background: none; border: 0; padding: 4px 0; color: #2F55C9; font-weight: 600; font-size: 13px; cursor: pointer">+ Add dataset</button></sc-if>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 6px"><sc-for list="{{r.chips}}" as="ch"><span class="chip" style="{{ch.style}}">{{ch.label}}</span></sc-for></div>
+<div style="display: flex; align-items: center; justify-content: center; gap: 6px">
+<sc-if value="{{r.recDash}}" hint-placeholder-val="{{true}}"><span style="color: #A1A1AA">—</span></sc-if>
+<sc-if value="{{r.recNum}}" hint-placeholder-val="{{false}}"><span style="font-weight: 700; color: #18181B">{{r.recText}}</span></sc-if>
+<sc-if value="{{r.recRun}}" hint-placeholder-val="{{false}}"><span class="spin"></span><span style="color: #C23A00; font-weight: 600; font-size: 13px">Running</span></sc-if>
+<sc-if value="{{r.recOld}}" hint-placeholder-val="{{false}}"><span style="color: #A1A1AA; {{r.oldStrike}}">{{r.recText}}</span><span title="{{r.reason}}" style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: #FEF3C7; color: #8A5300; font-size: 11px; font-weight: 700">Outdated</span></sc-if>
+</div>
+<div style="text-align: center; font-weight: 700; {{r.annStyle}}">{{r.ann}}</div>
+<div style="text-align: center; font-size: 13px; color: #52525B">{{r.created}}</div>
+<div style="text-align: center; font-size: 13px; color: #52525B">{{r.modified}}</div>
+<div style="display: flex; justify-content: center"><sc-if value="{{r.canEdit}}" hint-placeholder-val="{{false}}"><button class="ibtn" title="Edit folders in recipe" aria-label="Edit folders in recipe" onClick="{{r.edit}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button></sc-if></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isAnnot}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column">
+<nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 20px; font-size: 13px; color: #3F3F46">
+<button onClick="{{back}}" style="display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid #FF4A00; color: #D63F00; background: #FFFFFF; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer">← Datasets &amp; Annotations</button>
+<span>Test Project</span><span style="color: #A1A1AA">›</span><span>variant 1</span><span style="color: #A1A1AA">›</span><span>capture 2</span><span style="color: #A1A1AA">›</span><span>{{folderName}}</span><span style="color: #A1A1AA">›</span><span style="font-weight: 700; color: #18181B">{{dsName}}</span>
+</nav>
+<div style="display: flex; flex-wrap: wrap; border-top: 1px solid #E4E4E7; min-height: 790px">
+<div style="flex: 0 1 410px; min-width: 320px; border-right: 1px solid #E4E4E7; display: flex; flex-direction: column">
+<div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">{{imgName}}</h2>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: #52525B">Folder <sc-for list="{{folderChips}}" as="ch"><span class="chip" style="{{ch.style}}">{{ch.label}}</span></sc-for></div>
+</div>
+
+<section style="border: 1px solid #D4D4D8; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h3 style="margin: 0; font-size: 16px; font-weight: 700">1. ODC_1</h3>
+<p style="margin: 0; font-size: 13px; color: #52525B">Pick a class, then drag on the image to label it</p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px"><sc-for list="{{clsChips}}" as="c" hint-placeholder-count="3"><button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="height: 30px; cursor: pointer; font-family: inherit; {{c.style}}">{{c.label}}</button></sc-for>
+<sc-if value="{{hasAbsentChips}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="width: 1px; height: 22px; background: #E4E4E7; margin: 0 2px"></span><sc-for list="{{absentChips}}" as="a" hint-placeholder-count="1"><button class="chip" onClick="{{a.pick}}" aria-pressed="{{a.pressed}}" title="{{a.title}}" style="height: 30px; gap: 6px; cursor: pointer; font-family: inherit; {{a.style}}"><sc-if value="{{a.needed}}" hint-placeholder-val="{{true}}"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #E25000"></span></sc-if>{{a.label}}</button></sc-for></sc-if>
+</div>
+<sc-if value="{{absentNeeded}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; color: #52525B">{{absentHint}}</p></sc-if>
+<h4 style="margin: 6px 0 0; font-size: 13px; font-weight: 600">Current class labels for the image</h4>
+<sc-if value="{{noBoxes}}" hint-placeholder-val="{{false}}"><p style="margin: 0; font-size: 12px; color: #71717A">No labels yet</p></sc-if>
+<sc-for list="{{boxList}}" as="b" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 8px; border: 1px solid #E4E4E7; border-radius: 8px; padding: 4px 8px">
+<span style="width: 20px; font-size: 13px; color: #71717A">{{b.num}}.</span>
+<span class="chip" style="{{b.style}}">{{b.label}}</span>
+<span style="flex: 1"></span>
+<button class="ibtn" aria-label="{{b.delLabel}}" onClick="{{b.del}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path></svg></button>
+</div>
+</sc-for>
+</section>
+<button onClick="{{copyMaster}}" title="Copies training labels from the master image. Absent labels are never copied." style="height: 40px; border: 0; border-radius: 8px; background: #FF4A00; color: #FFFFFF; font-weight: 700; font-size: 14px; cursor: pointer">Copy Master Image Annotation</button>
+</div>
+<div style="border-top: 1px solid #E4E4E7; padding: 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<button onClick="{{saveNext}}" style="width: 100%; max-width: 280px; height: 40px; border: 0; border-radius: 8px; background: #FF4A00; color: #FFFFFF; font-weight: 700; font-size: 14px; cursor: pointer">Save &amp; Next</button>
+<div style="display: flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid #E4E4E7; border-radius: 999px">
+<button class="ibtn" aria-label="Previous image" disabled="{{prevDisabled}}" onClick="{{prevImg}}">‹</button>
+<sc-for list="{{pager}}" as="p" hint-placeholder-count="3"><button onClick="{{p.go}}" aria-current="{{p.current}}" aria-label="{{p.label}}" style="min-width: 28px; height: 28px; border: 0; background: none; cursor: pointer; font-size: 14px; {{p.style}}">{{p.num}}</button></sc-for>
+<button class="ibtn" aria-label="Next image" disabled="{{nextDisabled}}" onClick="{{nextImg}}">›</button>
+</div>
+<span style="font-size: 12px; color: #1E8E4A">{{rangeText}}</span>
+</div>
+</div>
+
+<div style="flex: 999 1 560px; min-width: 0; padding: 16px; background: #FAFAFA; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; {{hintStyle}}">
+<span style="flex: 1">{{hintText}}</span>
+<sc-if value="{{drawing}}" hint-placeholder-val="{{false}}"><button class="link" onClick="{{stopDraw}}">Stop</button></sc-if>
+</div>
+<div onMouseDown="{{down}}" onMouseMove="{{move}}" onMouseUp="{{up}}" onMouseLeave="{{up}}" style="position: relative; width: 100%; aspect-ratio: 16 / 10; background: #3F4C45; border-radius: 8px; overflow: hidden; user-select: none; {{cursor}}">
+<div style="position: absolute; pointer-events: none; left: 2%; top: 4%; width: 96%; height: 74%; background: #55645C; border: 2px solid #7D8D84; border-radius: 14px"></div>
+<div style="position: absolute; pointer-events: none; left: 18%; top: 14%; width: 2.6%; height: 14%; background: #26302B; border-radius: 6px"></div>
+<div style="position: absolute; pointer-events: none; left: 46%; top: 20%; width: 2.6%; height: 12%; background: #26302B; border-radius: 6px"></div>
+<div style="position: absolute; pointer-events: none; left: 64%; top: 44%; width: 2.2%; height: 18%; background: #26302B; border-radius: 6px"></div>
+<div style="position: absolute; pointer-events: none; left: 25%; top: 62%; width: 2.2%; height: 12%; background: #26302B; border-radius: 6px"></div>
+<sc-if value="{{hasOdc2}}" hint-placeholder-val="{{true}}">
+<div style="position: absolute; pointer-events: none; left: 32%; top: 41.5%; width: 4%; height: 7%; border: 3px solid #2B3630; border-radius: 4px; transform: rotate(35deg)"></div>
+<div style="position: absolute; pointer-events: none; left: 12.5%; top: 53.5%; width: 4%; height: 7%; border: 3px solid #2B3630; border-radius: 4px; transform: rotate(35deg)"></div>
+</sc-if>
+<sc-if value="{{hasOdc4}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; pointer-events: none; left: 32.5%; top: 41%; width: 3.2%; height: 5.1%; background: #9DB86A; border: 3px solid #2B3630; border-radius: 50%"></div>
+<div style="position: absolute; pointer-events: none; left: 13%; top: 53%; width: 3.2%; height: 5.1%; background: #9DB86A; border: 3px solid #2B3630; border-radius: 50%"></div>
+</sc-if>
+<sc-if value="{{hasOdc3}}" hint-placeholder-val="{{true}}">
+<div style="position: absolute; pointer-events: none; left: 55.5%; top: 66.5%; width: 2.5%; height: 3%; background: #1E2622; border-radius: 2px"></div>
+<div style="position: absolute; pointer-events: none; left: 40.5%; top: 66.5%; width: 2.5%; height: 3%; background: #1E2622; border-radius: 2px"></div>
+</sc-if>
+<div style="position: absolute; pointer-events: none; left: 79.5%; top: 13.7%; width: 6%; height: 9.6%; background: #C9785A; border-radius: 50%"><div style="position: absolute; left: 33%; top: 33%; width: 34%; height: 34%; background: #3A2A24; border-radius: 50%"></div></div>
+<div style="position: absolute; pointer-events: none; left: 92%; top: 81.7%; width: 6%; height: 9.6%; background: #C9785A; border-radius: 50%"><div style="position: absolute; left: 33%; top: 33%; width: 34%; height: 34%; background: #3A2A24; border-radius: 50%"></div></div>
+<div style="position: absolute; pointer-events: none; left: 86%; top: 38%; width: 10%; height: 20%; background: #C8D44A; border-radius: 0 0 40px 40px"></div>
+<div style="position: absolute; pointer-events: none; left: 16%; top: 82%; width: 70%; height: 15%; background: #E7EBE6; border-radius: 6px"></div>
+<div class="qr" style="position: absolute; pointer-events: none; left: 3%; top: 80%; width: 10%; height: 17%; border: 4px solid #FFFFFF"></div>
+<sc-for list="{{boxes}}" as="b" hint-placeholder-count="3">
+<div style="position: absolute; pointer-events: none; {{b.style}}"><span style="position: absolute; font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: 4px; white-space: nowrap; {{b.labelStyle}}">{{b.text}}</span></div>
+</sc-for>
+<sc-if value="{{hasDrag}}" hint-placeholder-val="{{false}}"><div style="position: absolute; pointer-events: none; {{dragStyle}}"></div></sc-if>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 18px; font-size: 12px; color: #52525B">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 12px; border: 2px solid #52525B; border-radius: 2px"></span>Solid box: training label</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 12px; border: 2px dashed #52525B; border-radius: 2px"></span>Dashed: absent label</span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 18px; height: 12px; border: 3px dotted #52525B; border-radius: 2px"></span>Dotted: negative label</span>
+<span>Absent and negative labels are recommender-only: stripped from training, never block saving</span>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{modal}}" hint-placeholder-val="{{false}}">
+<div style="position: fixed; inset: 0; background: rgba(24, 24, 27, 0.45); display: flex; justify-content: center; align-items: flex-start; padding: 60px 16px; z-index: 20; overflow-y: auto">
+<div role="dialog" aria-modal="true" aria-labelledby="rr-title" style="width: 100%; max-width: 720px; background: #FFFFFF; border-radius: 12px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column">
+<div style="display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 12px; border-bottom: 1px solid #EFEFF1">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+<h3 id="rr-title" style="margin: 0; font-size: 18px; font-weight: 700">Run Data Recommender</h3>
+<p style="margin: 0; font-size: 13px; color: #52525B">Runs per capture and takes a few minutes. You can keep annotating while it runs.</p>
+</div>
+<button class="ibtn" aria-label="Close" onClick="{{closeModal}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<div style="padding: 10px 20px; background: #FAFAFA; border-bottom: 1px solid #EFEFF1; font-size: 12px; color: #52525B">Rules per capture: each class needs <strong>5</strong> labelled instances. Each absent class needs <strong>3</strong> absent labels, placed within the first 5 images without it. Each negative class needs <strong>5</strong> negative labels, placed within the first 5 images of its folder.</div>
+<div style="padding: 14px 20px; display: flex; flex-direction: column; gap: 16px; max-height: 520px; overflow-y: auto">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; gap: 8px"><h4 style="margin: 0; font-size: 14px; font-weight: 700">{{g.title}}</h4><span style="font-size: 12px; color: #71717A">{{g.count}} · {{g.desc}}</span></div>
+<sc-for list="{{g.rows}}" as="r" hint-placeholder-count="1">
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid #EAEAEC; border-radius: 10px; {{r.cardStyle}}">
+<sc-if value="{{r.selectable}}" hint-placeholder-val="{{true}}"><input type="checkbox" id="{{r.cid}}" checked="{{r.checked}}" onChange="{{r.toggle}}" style="width: 18px; height: 18px; accent-color: #FF4A00; margin: 2px 0 0; flex: none"></sc-if>
+<sc-if value="{{r.icRun}}" hint-placeholder-val="{{false}}"><span style="width: 18px; display: inline-flex; justify-content: center; margin-top: 3px; flex: none"><span class="spin"></span></span></sc-if>
+<sc-if value="{{r.icOk}}" hint-placeholder-val="{{false}}"><span style="width: 18px; display: inline-flex; justify-content: center; margin-top: 2px; flex: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E8E4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></span></sc-if>
+<sc-if value="{{r.icNo}}" hint-placeholder-val="{{false}}"><span style="width: 18px; display: inline-flex; justify-content: center; margin-top: 2px; flex: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg></span></sc-if>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<label for="{{r.cid}}" style="font-weight: 700; font-size: 14px">{{r.name}}</label>
+<span style="font-size: 12px; color: #52525B">{{r.meta}}</span>
+<sc-if value="{{r.hasDef}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{r.defs}}" as="d"><span class="chip" style="{{d.style}}">{{d.text}}</span></sc-for></div></sc-if>
+</div>
+<sc-if value="{{r.canAnnotate}}" hint-placeholder-val="{{false}}"><button class="link" style="font-size: 13px; white-space: nowrap" onClick="{{r.annotate}}">Annotate →</button></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFEFF1">
+<span style="flex: 1; font-size: 13px; color: #52525B">{{selText}}</span>
+<button onClick="{{closeModal}}" style="height: 38px; padding: 0 16px; border: 1px solid #D4D4D8; background: #FFFFFF; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer">Cancel</button>
+<button onClick="{{run}}" disabled="{{runDisabled}}" style="height: 38px; padding: 0 18px; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; {{runStyle}}">{{runText}}</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+<div role="status" style="position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #18181B; color: #FFFFFF; padding: 11px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 30; max-width: min(620px, calc(100vw - 32px)); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25)">{{toast}}</div>
+</sc-if>
+</div>
+</template>
+<script>!function(){var n,t,e,r,i,o,f,u,c,a,s,h,l,p,y,v,d,_="http://www.w3.org/2000/svg",w="http://www.w3.org/1999/xhtml",m=null,g=void 0,b={},k=[],x=/acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i,C=Array.isArray;function M(n,t){for(var e in t)n[e]=t[e];return n}function S(n){n&&n.parentNode&&n.parentNode.removeChild(n)}function $(t,e,r){var i,o,f,u={};for(f in e)"key"==f?i=e[f]:"ref"==f?o=e[f]:u[f]=e[f];if(arguments.length>2&&(u.children=arguments.length>3?n.call(arguments,2):r),"function"==typeof t&&t.defaultProps!=m)for(f in t.defaultProps)u[f]===g&&(u[f]=t.defaultProps[f]);return A(t,u,i,o,m)}function A(n,r,i,o,f){var u={type:n,props:r,key:i,ref:o,__k:m,__:m,__b:0,__e:m,__c:m,constructor:g,__v:f==m?++e:f,__i:-1,__u:0};return f==m&&t.vnode!=m&&t.vnode(u),u}function I(n){return n.children}function P(n,t){this.props=n,this.context=t}function E(n,t){if(t==m)return n.__?E(n.__,n.__i+1):m;for(var e;t<n.__k.length;t++)if((e=n.__k[t])!=m&&e.__e!=m)return e.__e;return"function"==typeof n.type?E(n):m}function F(n){if(n.__P&&n.__d){var e=n.__v,r=e.__e,i=[],o=[],f=M({},e);f.__v=e.__v+1,t.vnode&&t.vnode(f),B(n.__P,f,e,n.__n,n.__P.namespaceURI,32&e.__u?[r]:m,i,r==m?E(e):r,!!(32&e.__u),o),f.__v=e.__v,f.__.__k[f.__i]=f,G(i,f,o),e.__e=e.__=null,f.__e!=r&&H(f)}}function H(n){if((n=n.__)!=m&&n.__c!=m)return n.__e=n.__c.base=m,n.__k.some(function(t){if(t!=m&&t.__e!=m)return n.__e=n.__c.base=t.__e}),H(n)}function L(n){(!n.__d&&(n.__d=!0)&&i.push(n)&&!T.__r++||o!=t.debounceRendering)&&((o=t.debounceRendering)||f)(T)}function T(){try{for(var n,t=1;i.length;)i.length>t&&i.sort(u),n=i.shift(),t=i.length,F(n)}finally{i.length=T.__r=0}}function j(n,t,e,r,i,o,f,u,c,a,s){var h,l,p,y,v,d,_=r&&r.__k||k,w=t.length;for(c=O(e,t,_,c,w),h=0;h<w;h++)(p=e.__k[h])!=m&&(l=-1!=p.__i&&_[p.__i]||b,p.__i=h,d=B(n,p,l,i,o,f,u,c,a,s),y=p.__e,p.ref&&l.ref!=p.ref&&(l.ref&&Q(l.ref,m,p),s.push(p.ref,p.__c||y,p)),v==m&&y!=m&&(v=y),4&p.__u?(c=V(p,c,n),l.__e&&(l.__e=m)):"function"==typeof p.type&&d!==g?c=d:y&&(c=y.nextSibling),p.__u&=-7);return e.__e=v,c}function O(n,t,e,r,i){var o,f,u,c,a,s=e.length,h=s,l=0;for(n.__k=new Array(i),o=0;o<i;o++)(f=t[o])!=m&&"boolean"!=typeof f&&"function"!=typeof f?("string"==typeof f||"number"==typeof f||"bigint"==typeof f||f.constructor==String?f=n.__k[o]=A(m,f,m,m,m):C(f)?f=n.__k[o]=A(I,{children:f},m,m,m):f.constructor===g&&f.__b>0?f=n.__k[o]=A(f.type,f.props,f.key,f.ref?f.ref:m,f.__v):n.__k[o]=f,c=o+l,f.__=n,f.__b=n.__b+1,a=f.__i=z(f,e,c,h),u=m,-1!=a&&(h--,(u=e[a])&&(u.__u|=2)),u==m||u.__v==m?(-1==a&&(i>s?l--:i<s&&l++),"function"!=typeof f.type&&(f.__u|=4)):a!=c&&(a==c-1?l--:a==c+1?l++:(a>c?l--:l++,f.__u|=4))):n.__k[o]=m;if(h)for(o=0;o<s;o++)(u=e[o])!=m&&0==(2&u.__u)&&(u.__e==r&&(r=E(u)),U(u,u));return r}function V(n,t,e){var r,i;if("function"==typeof n.type){for(r=n.__k,i=0;r&&i<r.length;i++)r[i]&&(r[i].__=n,t=V(r[i],t,e));return t}n.__e!=t&&(t&&n.type&&!t.parentNode&&(t=E(n)),t=e.insertBefore(n.__e,t||m));do{t=t&&t.nextSibling}while(t!=m&&8==t.nodeType);return t}function z(n,t,e,r){var i,o,f,u=n.key,c=n.type,a=t[e],s=a!=m&&0==(2&a.__u);if(a===m&&null==u||s&&u==a.key&&c==a.type)return e;if(r>(s?1:0))for(i=e-1,o=e+1;i>=0||o<t.length;)if((a=t[f=i>=0?i--:o++])!=m&&0==(2&a.__u)&&u==a.key&&c==a.type)return f;return-1}function N(n,t,e){"-"==t[0]?n.setProperty(t,e==m?"":e):n[t]=e==m?"":"number"!=typeof e||x.test(t)?e:e+"px"}function R(n,t,e,r,i){var o,f;n:if("style"==t)if("string"==typeof e)n.style.cssText=e;else{if("string"==typeof r&&(n.style.cssText=r=""),r)for(t in r)e&&t in e||N(n.style,t,"");if(e)for(t in e)r&&e[t]==r[t]||N(n.style,t,e[t])}else if("o"==t[0]&&"n"==t[1])o=t!=(t=t.replace(h,"$1")),f=t.toLowerCase(),t=f in n||"onFocusOut"==t||"onFocusIn"==t?f.slice(2):t.slice(2),n.l||(n.l={}),n.l[t+o]=e,e?r?e[s]=r[s]:(e[s]=l,n.addEventListener(t,o?y:p,o)):n.removeEventListener(t,o?y:p,o);else{if(i==_)t=t.replace(/xlink(H|:h)/,"h").replace(/sName$/,"s");else if("width"!=t&&"height"!=t&&"href"!=t&&"list"!=t&&"form"!=t&&"tabIndex"!=t&&"download"!=t&&"rowSpan"!=t&&"colSpan"!=t&&"role"!=t&&"popover"!=t&&t in n)try{n[t]=e==m?"":e;break n}catch(n){}"function"==typeof e||(e==m||!1===e&&"-"!=t[4]?n.removeAttribute(t):n.setAttribute(t,"popover"==t&&1==e?"":e))}}function q(n){return function(e){if(this.l){var r=this.l[e.type+n];if(e[a]==m)e[a]=l++;else if(e[a]<r[s])return;return r(t.event?t.event(e):e)}}}function B(n,e,r,i,o,f,u,c,a,s){var h,l,p,y,v,d,_,w,b,x,$,A,F,H,L,T,O=e.type;if(e.constructor!==g)return m;128&r.__u&&(a=!!(32&r.__u),f=[c=e.__e=r.__e]),(h=t.__b)&&h(e);n:if("function"==typeof O){l=u.length;try{if(b=e.props,x=O.prototype&&O.prototype.render,$=(h=O.contextType)&&i[h.__c],A=h?$?$.props.value:h.__:i,r.__c?w=(p=e.__c=r.__c).__=p.__E:(x?e.__c=p=new O(b,A):(e.__c=p=new P(b,A),p.constructor=O,p.render=W),$&&$.sub(p),p.state||(p.state={}),p.__n=i,y=p.__d=!0,p.__h=[],p._sb=[]),x&&p.__s==m&&(p.__s=p.state),x&&O.getDerivedStateFromProps!=m&&(p.__s==p.state&&(p.__s=M({},p.__s)),M(p.__s,O.getDerivedStateFromProps(b,p.__s))),v=p.props,d=p.state,p.__v=e,y)x&&O.getDerivedStateFromProps==m&&p.componentWillMount!=m&&p.componentWillMount(),x&&p.componentDidMount!=m&&p.__h.push(p.componentDidMount);else{if(x&&O.getDerivedStateFromProps==m&&b!==v&&p.componentWillReceiveProps!=m&&p.componentWillReceiveProps(b,A),e.__v==r.__v||!p.__e&&p.shouldComponentUpdate!=m&&!1===p.shouldComponentUpdate(b,p.__s,A)){e.__v!=r.__v&&(p.props=b,p.state=p.__s,p.__d=!1),e.__e=r.__e,e.__k=r.__k,e.__k.some(function(n){n&&(n.__=e)}),k.push.apply(p.__h,p._sb),p._sb=[],p.__h.length&&u.push(p),c=E(r);break n}p.componentWillUpdate!=m&&p.componentWillUpdate(b,p.__s,A),x&&p.componentDidUpdate!=m&&p.__h.push(function(){p.componentDidUpdate(v,d,_)})}if(p.context=A,p.props=b,p.__P=n,p.__e=!1,F=t.__r,H=0,x)p.state=p.__s,p.__d=!1,F&&F(e),h=p.render(p.props,p.state,p.context),k.push.apply(p.__h,p._sb),p._sb=[];else do{p.__d=!1,F&&F(e),h=p.render(p.props,p.state,p.context),p.state=p.__s}while(p.__d&&++H<25);p.state=p.__s,p.getChildContext!=m&&(i=M(M({},i),p.getChildContext())),x&&!y&&p.getSnapshotBeforeUpdate!=m&&(_=p.getSnapshotBeforeUpdate(v,d)),L=h!=m&&h.type===I&&h.key==m?J(h.props.children):h,c=j(n,C(L)?L:[L],e,r,i,o,f,u,c,a,s),p.base=e.__e,e.__u&=-161,p.__h.length&&u.push(p),w&&(p.__E=p.__=m)}catch(n){if(u.length=l,e.__v=m,a||f!=m){if(n.then){for(e.__u|=a?160:128;c&&8==c.nodeType&&c.nextSibling;)c=c.nextSibling;f!=m&&(f[f.indexOf(c)]=m),e.__e=c}else if(f!=m)for(T=f.length;T--;)S(f[T])}else e.__e=r.__e;e.__k==m&&(e.__k=r.__k||[]),n.then||D(e),t.__e(n,e,r)}}else f==m&&e.__v==r.__v?(e.__k=r.__k,e.__e=r.__e):c=e.__e=K(r.__e,e,r,i,o,f,u,a,s);return(h=t.diffed)&&h(e),128&e.__u?void 0:c}function D(n){n&&(n.__c&&(n.__c.__e=!0),n.__k&&n.__k.some(D))}function G(n,e,r){for(var i=0;i<r.length;i++)Q(r[i],r[++i],r[++i]);t.__c&&t.__c(e,n),n.some(function(e){try{n=e.__h,e.__h=[],n.some(function(n){n.call(e)})}catch(n){t.__e(n,e.__v)}})}function J(n){return"object"!=typeof n||n==m||n.__b>0?n:C(n)?n.map(J):n.constructor!==g?null:M({},n)}function K(e,r,i,o,f,u,c,a,s){var h,l,p,y,v,d,k,x=i.props||b,M=r.props,$=r.type;if("svg"==$?f=_:"math"==$?f="http://www.w3.org/1998/Math/MathML":f||(f=w),u!=m)for(h=0;h<u.length;h++)if((v=u[h])&&"setAttribute"in v==!!$&&($?v.localName==$:3==v.nodeType)){e=v,u[h]=m;break}if(e==m){if($==m)return document.createTextNode(M);e=document.createElementNS(f,$,M.is&&M),a&&(t.__m&&t.__m(r,u),a=!1),u=m}if($==m)x===M||a&&e.data==M||(e.data=M);else{if(u="textarea"==$&&M.defaultValue!=m?m:u&&n.call(e.childNodes),!a&&u!=m)for(x={},h=0;h<e.attributes.length;h++)x[(v=e.attributes[h]).name]=v.value;for(h in x)v=x[h],"dangerouslySetInnerHTML"==h?p=v:"children"==h||h in M||"value"==h&&"defaultValue"in M||"checked"==h&&"defaultChecked"in M||R(e,h,m,v,f);for(h in M)v=M[h],"children"==h?y=v:"dangerouslySetInnerHTML"==h?l=v:"value"==h?d=v:"checked"==h?k=v:a&&"function"!=typeof v||x[h]===v||R(e,h,v,x[h],f);if(l)a||p&&(l.__html==p.__html||l.__html==e.innerHTML)||(e.innerHTML=l.__html),r.__k=[];else if(p&&(e.innerHTML=""),j("template"==r.type?e.content:e,C(y)?y:[y],r,i,o,"foreignObject"==$?w:f,u,c,u?u[0]:i.__k&&E(i,0),a,s),u!=m)for(h=u.length;h--;)S(u[h]);a&&"textarea"!=$||(h="value","progress"==$&&d==m?e.removeAttribute("value"):d!=g&&(d!==e[h]||"progress"==$&&!d||"option"==$&&d!=x[h])&&R(e,h,d,x[h],f),h="checked",k!=g&&k!=e[h]&&R(e,h,k,x[h],f))}return e}function Q(n,e,r){try{if("function"==typeof n){var i="function"==typeof n.__u;i&&n.__u(),i&&e==m||(n.__u=n(e))}else n.current=e}catch(n){t.__e(n,r)}}function U(n,e,r){var i,o;if(t.unmount&&t.unmount(n),(i=n.ref)&&(i.current&&i.current!=n.__e||Q(i,m,e)),(i=n.__c)!=m){if(i.componentWillUnmount)try{i.componentWillUnmount()}catch(n){t.__e(n,e)}i.base=i.__P=i.__n=m}if(i=n.__k)for(o=0;o<i.length;o++)i[o]&&U(i[o],e,r||"function"!=typeof n.type);r||S(n.__e),n.__c=n.__=n.__e=g}function W(n,t,e){return this.constructor(n,e)}function X(e,r,i){var o,f,u,c;r==document&&(r=document.documentElement),t.__&&t.__(e,r),f=(o="function"==typeof i)?m:i&&i.__k||r.__k,u=[],c=[],B(r,e=(!o&&i||r).__k=$(I,m,[e]),f||b,b,r.namespaceURI,!o&&i?[i]:f?m:r.firstChild?n.call(r.childNodes):m,u,!o&&i?i:f?f.__e:r.firstChild,o,c),G(u,e,c),e.props.children=m}n=k.slice,t={__e:function(n,t,e,r){for(var i,o,f;t=t.__;)if((i=t.__c)&&!i.__)try{if((o=i.constructor)&&o.getDerivedStateFromError!=m&&(i.setState(o.getDerivedStateFromError(n)),f=i.__d),i.componentDidCatch!=m&&(i.componentDidCatch(n,r||{}),f=i.__d),f)return i.__E=i}catch(t){n=t}throw n}},e=0,r=function(n){return n!=m&&n.constructor===g},P.prototype.setState=function(n,t){var e;e=this.__s!=m&&this.__s!=this.state?this.__s:this.__s=M({},this.state),"function"==typeof n&&(n=n(M({},e),this.props)),n&&M(e,n),n!=m&&this.__v&&(t&&this._sb.push(t),L(this))},P.prototype.forceUpdate=function(n){this.__v&&(this.__e=!0,n&&this.__h.push(n),L(this))},P.prototype.render=I,i=[],f="function"==typeof Promise?Promise.prototype.then.bind(Promise.resolve()):setTimeout,u=function(n,t){return n.__v.__b-t.__v.__b},T.__r=0,c=Math.random().toString(8),a="__d"+c,s="__a"+c,h=/(PointerCapture)$|Capture$/i,l=0,p=q(!1),y=q(!0),v=0,d={__proto__:null,render:X,hydrate:function n(t,e){X(t,e,n)},createElement:$,h:$,Fragment:I,createRef:function(){return{current:m}},isValidElement:r,Component:P,cloneElement:function(t,e,r){var i,o,f,u,c=M({},t.props);for(f in t.type&&t.type.defaultProps&&(u=t.type.defaultProps),e)"key"==f?i=e[f]:"ref"==f?o=e[f]:c[f]=e[f]===g&&u!=g?u[f]:e[f];return arguments.length>2&&(c.children=arguments.length>3?n.call(arguments,2):r),A(t.type,c,i||t.key,o||t.ref,m)},createContext:function(n){function t(n){var e,r;return this.getChildContext||(e=new Set,(r={})[t.__c]=this,this.getChildContext=function(){return r},this.componentWillUnmount=function(){e=m},this.shouldComponentUpdate=function(n){this.props.value!=n.value&&e.forEach(function(n){n.__e=!0,L(n)})},this.sub=function(n){e.add(n);var t=n.componentWillUnmount;n.componentWillUnmount=function(){e&&e.delete(n),t&&t.call(n)}}),n.children}return t.__c="__cC"+v++,t.__=n,t.Provider=t.__l=(t.Consumer=function(n,t){return n.children(t)}).contextType=t,t},toChildArray:function n(t,e){return e=e||[],t==m||"boolean"==typeof t||(C(t)?t.some(function(t){n(t,e)}):e.push(t)),e},options:t},typeof module<"u"?module.exports=d:self.preact=d}();
+//# sourceMappingURL=preact.min.js.map
+</script>
+<script>
+(function () {
+  var h = preact.h, render = preact.render;
+  var HOLE = /\{\{\s*([^}]+?)\s*\}\}/g;
+  var ONE = /^\s*\{\{\s*([^}]+?)\s*\}\}\s*$/;
+  var pending = false, root, comp, tpl;
+
+  window.DCLogic = function DCLogic(props) { this.props = props || {}; this.state = {}; };
+  DCLogic.prototype.setState = function (u) {
+    var v = typeof u === 'function' ? u(this.state, this.props) : u;
+    if (v) this.state = Object.assign({}, this.state, v);
+    schedule();
+  };
+  DCLogic.prototype.forceUpdate = function () { schedule(); };
+
+  function schedule() {
+    if (pending || !comp) return;
+    pending = true;
+    Promise.resolve().then(function () { pending = false; paint(); });
+  }
+  function lookup(path, scope) {
+    path = path.trim();
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    if (path === 'null') return null;
+    if (/^-?\d+(\.\d+)?$/.test(path)) return +path;
+    if (/^'.*'$|^".*"$/.test(path)) return path.slice(1, -1);
+    var parts = path.split('.'), v = scope;
+    for (var i = 0; i < parts.length; i++) { if (v == null) return undefined; v = v[parts[i]]; }
+    return v;
+  }
+  function interp(str, scope) {
+    return str.replace(HOLE, function (_, p) { var v = lookup(p, scope); return v == null ? '' : String(v); });
+  }
+  function kids(node, scope) {
+    var out = [];
+    node.childNodes.forEach(function (c) {
+      var r = build(c, scope);
+      if (Array.isArray(r)) out.push.apply(out, r); else if (r != null) out.push(r);
+    });
+    return out;
+  }
+  function build(node, scope) {
+    if (node.nodeType === 3) return node.nodeValue.indexOf('{{') < 0 ? node.nodeValue : interp(node.nodeValue, scope);
+    if (node.nodeType !== 1) return null;
+    var tag = node.localName;
+    if (tag === 'sc-if') return lookup(ONE.exec(node.getAttribute('value'))[1], scope) ? kids(node, scope) : null;
+    if (tag === 'sc-for') {
+      var list = lookup(ONE.exec(node.getAttribute('list'))[1], scope) || [];
+      var as = node.getAttribute('as') || 'item', out = [];
+      list.forEach(function (item, i) {
+        var s = Object.create(scope); s[as] = item; s.$index = i;
+        out.push.apply(out, kids(node, s));
+      });
+      return out;
+    }
+    var props = {};
+    for (var i = 0; i < node.attributes.length; i++) {
+      var a = node.attributes[i], m = ONE.exec(a.value);
+      props[a.name] = m ? lookup(m[1], scope) : (a.value.indexOf('{{') < 0 ? a.value : interp(a.value, scope));
+    }
+    return h.apply(null, [tag, props].concat(kids(node, scope)));
+  }
+  function paint() {
+    var vals = comp.renderVals();
+    render(build(tpl.firstElementChild, vals), root);
+  }
+  window.mountDC = function (Component, props) {
+    tpl = document.getElementById('dc-template').content;
+    root = document.getElementById('root');
+    comp = new Component(props);
+    paint();
+    if (comp.componentDidMount) comp.componentDidMount();
+  };
+})();
+</script>
+<script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.N = { odc1: 'odc 1', odc2: 'odc 2', odc3: 'odc3', odc4: 'odc4', text: 'text', scratch: 'scratch', dent: 'dent', burr: 'burr' };
+    this.NEED = { present: 5, absent: 3, neg: 5 };
+    this.WINDOW = 5;
+    this.CL = {
+      odc1: { fg: '#A3133F', bg: '#FCE4EC', bd: '#F0A3BA', box: '#E0457B' },
+      odc2: { fg: '#17713A', bg: '#E3F6E8', bd: '#97D5A9', box: '#16A35F' },
+      odc3: { fg: '#4433A8', bg: '#ECE9FC', bd: '#B5ABEF', box: '#6D6BF0' },
+      odc4: { fg: '#3F6212', bg: '#EEF7DC', bd: '#B5D98A', box: '#5E9E0C' },
+      text: { fg: '#1D5BA8', bg: '#E4EEFB', bd: '#A6C4EC', box: '#2F6FD0' },
+      scratch: { fg: '#7A4E00', bg: '#FDF1D8', bd: '#EBCB84', box: '#C98A00' },
+      dent: { fg: '#0B6464', bg: '#DDF3F2', bd: '#8FD0CC', box: '#0E8C8C' },
+      burr: { fg: '#4B4B52', bg: '#EFEFF1', bd: '#CDCDD3', box: '#71717A' }
+    };
+    this.POS = {
+      odc1: [{ l: 77.5, t: 7, w: 10, h: 23 }, { l: 90.5, t: 75, w: 9, h: 23 }],
+      odc2: [{ l: 30.5, t: 39, w: 7, h: 12 }, { l: 11, t: 51, w: 7, h: 12 }],
+      odc3: [{ l: 54.5, t: 65, w: 4.5, h: 6 }, { l: 39.5, t: 65, w: 4.5, h: 6 }],
+      odc4: [{ l: 30.5, t: 39, w: 7, h: 12 }, { l: 11, t: 51, w: 7, h: 12 }]
+    };
+    this.GEN = { fA: 180, fB: 120, fC: 110, f3: 60, f4: 140, f5: 220, f6: 95, f7: 110 };
+    this.SLOTS = ['00:00 - 06:00', '06:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00'];
+    this.COMBOS = ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3', 'odc1|odc4'];
+    this.KIND = { absent: ' · absent', neg: ' · negative', present: '' };
+    this.timers = [];
+    this.state = this.initial();
+  }
+
+  componentWillUnmount() { this.timers.forEach(t => clearTimeout(t)); }
+
+  initial() {
+    const b = (cls, i) => Object.assign({ cls: cls, absent: false, neg: false }, this.POS[cls][i]);
+    const fo = (id, cap, classes, rec, date) => ({ id: id, cap: cap, classes: classes, rec: rec, created: date, modified: date });
+    return {
+      screen: 'wizard', modal: false, banner: false, toast: null, firstFinish: true,
+      caps: [
+        { id: 'c1', variant: 'variant 1', name: 'capture 1', classes: ['odc1', 'text'], absent: [], live: false, staticReady: false, deficits: [{ cls: 'odc1', n: 3 }, { cls: 'text', n: 5 }], rec: { state: 'none' } },
+        { id: 'c2', variant: 'variant 1', name: 'capture 2', classes: ['odc1', 'odc2', 'odc3'], absent: ['odc3'], neg: ['odc4'], negOf: { odc4: 'odc2' }, live: true, rec: { state: 'none' } },
+        { id: 'c3', variant: 'variant 1', name: 'Test Capture', classes: ['odc1'], absent: [], live: false, staticReady: true, rec: { state: 'none' } },
+        { id: 'c4', variant: 'variant 2', name: 'Top view', classes: ['scratch', 'dent'], absent: [], live: false, staticReady: true, rec: { state: 'generated', at: '02 Oct' } },
+        { id: 'c5', variant: 'variant 2', name: 'Side view', classes: ['dent', 'burr'], absent: [], live: false, staticReady: true, rec: { state: 'outdated', reason: "Folder 'dent & burr' added after the last run" } }
+      ],
+      folders: [
+        fo('f1', 'c1', ['odc1'], null, '9/8/2026'),
+        fo('f2', 'c1', ['odc1', 'text'], null, '9/8/2026'),
+        fo('fA', 'c2', ['odc1', 'odc2', 'odc3'], null, '10/5/2026'),
+        fo('fB', 'c2', ['odc1', 'odc2'], null, '10/5/2026'),
+        fo('fC', 'c2', ['odc1', 'odc4', 'odc3'], null, '10/5/2026'),
+        fo('f3', 'c3', ['odc1'], null, '7/14/2026'),
+        fo('f4', 'c4', ['scratch'], 140, '9/22/2026'),
+        fo('f5', 'c4', ['scratch', 'dent'], 220, '9/22/2026'),
+        fo('f6', 'c5', ['dent'], 90, '9/22/2026'),
+        fo('f7', 'c5', ['dent', 'burr'], null, '10/1/2026')
+      ],
+      datasets: [
+        { id: 'dx1', folder: 'f1', slot: 0, name: 'batch-1', sAnn: 2, sTot: 4 },
+        { id: 'dx2', folder: 'f2', slot: 0, name: 'batch-1', sAnn: 1, sTot: 3 },
+        { id: 'd1', folder: 'fA', slot: 0, name: 'hbj' },
+        { id: 'dx3', folder: 'f3', slot: 1, name: 'line-cam', sAnn: 13, sTot: 13 },
+        { id: 'dx4', folder: 'f4', slot: 0, name: 'top-01', sAnn: 40, sTot: 40 },
+        { id: 'dx5', folder: 'f5', slot: 0, name: 'top-02', sAnn: 52, sTot: 52 },
+        { id: 'dx6', folder: 'f6', slot: 2, name: 'side-01', sAnn: 30, sTot: 30 },
+        { id: 'dx7', folder: 'f7', slot: 2, name: 'side-02', sAnn: 0, sTot: 12 }
+      ],
+      images: [
+        { id: 'A1', ds: 'd1', name: 'Test Image 1.png', saved: true, boxes: [b('odc1', 0), b('odc1', 1), b('odc2', 0), b('odc3', 0)] },
+        { id: 'A2', ds: 'd1', name: 'Test Image 2.png', saved: true, boxes: [b('odc1', 0), b('odc2', 0), b('odc3', 0)] },
+        { id: 'A3', ds: 'd1', name: 'Test Image 3.png', saved: false, boxes: [] }
+      ],
+      exp: { fA: true }, expSlot: { 'fA|0': true },
+      cur: null, activeCls: null, drag: null, sel: {},
+      wiz: ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3'], seq: 10, special: null
+    };
+  }
+
+  clone(o) { return JSON.parse(JSON.stringify(o)); }
+  mut(fn) { const s = this.clone(this.state); fn(s); this.setState(s); return s; }
+  say(text) {
+    this.setState({ toast: text });
+    const t = setTimeout(() => { if (this.state.toast === text) this.setState({ toast: null }); }, 4500);
+    this.timers.push(t);
+  }
+  fname(f) { return f.classes.map(c => this.N[c]).join(' & '); }
+  chipStyle(c, dashed) { const k = this.CL[c]; return 'background:' + k.bg + '; color:' + k.fg + '; border:1px ' + (dashed ? 'dashed' : 'solid') + ' ' + k.bd + ';'; }
+  chips(classes) { return classes.map(c => ({ label: this.N[c], style: this.chipStyle(c, false) })); }
+  imgsOfCap(s, capId) {
+    const fids = s.folders.filter(f => f.cap === capId).map(f => f.id);
+    const dids = s.datasets.filter(d => fids.indexOf(d.folder) >= 0).map(d => d.id);
+    return s.images.filter(i => dids.indexOf(i.ds) >= 0);
+  }
+  readiness(s, cap) {
+    if (!cap.live) return { ready: !!cap.staticReady, rules: [], defs: (cap.deficits || []).map(d => ({ cls: d.cls, kind: 'present', n: d.n })) };
+    const imgs = this.imgsOfCap(s, cap.id).filter(i => i.saved);
+    const rules = [];
+    const add = (c, kind) => {
+      const have = this.countKind(imgs, c, kind);
+      rules.push({ cls: c, kind: kind, have: have, need: this.NEED[kind], ok: have >= this.NEED[kind] });
+    };
+    cap.classes.forEach(c => add(c, 'present'));
+    (cap.absent || []).forEach(c => add(c, 'absent'));
+    (cap.neg || []).forEach(c => add(c, 'neg'));
+    return { ready: rules.every(r => r.ok), rules: rules, defs: rules.filter(r => !r.ok).map(r => ({ cls: r.cls, kind: r.kind, n: r.need - r.have })) };
+  }
+  kindOf(x) { return x.absent ? 'absent' : (x.neg ? 'neg' : 'present'); }
+  countKind(imgs, c, kind) { return imgs.reduce((n, i) => n + i.boxes.filter(x => x.cls === c && this.kindOf(x) === kind).length, 0); }
+  // Recommender-only labels are offered on the first WINDOW images of the capture (in dataset creation
+  // order) that sit in folders WITHOUT the class (absent) or WITH the class (negative).
+  specialImages(s, capId, cls, kind) {
+    const fids = s.folders.filter(f => f.cap === capId && (kind === 'absent' ? f.classes.indexOf(cls) < 0 : f.classes.indexOf(cls) >= 0)).map(f => f.id);
+    const out = [];
+    for (const d of s.datasets) {
+      if (fids.indexOf(d.folder) < 0) continue;
+      s.images.filter(i => i.ds === d.id).forEach(i => out.push(i));
+      if (out.length >= this.WINDOW) break;
+    }
+    return out.slice(0, this.WINDOW);
+  }
+  readyNow(s) { return this.readiness(s, s.caps.find(c => c.id === 'c2')).ready; }
+  group(s, cap) {
+    const st = cap.rec.state; const r = this.readiness(s, cap);
+    if (st === 'running') return 'running';
+    if (st === 'generated') return 'uptodate';
+    if (st === 'outdated') return r.ready ? 'outdated' : 'notready';
+    return r.ready ? 'ready' : 'notready';
+  }
+  curCtx(s) {
+    const img = s.images.find(i => i.id === s.cur); if (!img) return null;
+    const ds = s.datasets.find(d => d.id === img.ds);
+    const folder = s.folders.find(f => f.id === ds.folder);
+    const cap = s.caps.find(c => c.id === folder.cap);
+    return { img: img, ds: ds, folder: folder, cap: cap };
+  }
+  wizLock(s, key) {
+    const cap = s.caps.find(c => c.id === 'c2');
+    const classes = key.split('|');
+    const folder = s.folders.find(f => f.cap === 'c2' && f.classes.join('|') === key);
+    if (folder && s.datasets.some(d => d.folder === folder.id)) return 'Has uploaded images';
+    const only = cap.absent.filter(a => classes.indexOf(a) < 0 && s.wiz.filter(k => k.split('|').indexOf(a) < 0).length === 1);
+    if (s.wiz.indexOf(key) >= 0 && only.length) return 'Only folder without ' + this.N[only[0]];
+    const onlyNeg = (cap.neg || []).filter(n => classes.indexOf(n) >= 0 && s.wiz.filter(k => k.split('|').indexOf(n) >= 0).length === 1);
+    if (s.wiz.indexOf(key) >= 0 && onlyNeg.length) return 'Only folder with ' + this.N[onlyNeg[0]];
+    return '';
+  }
+
+  /* ---------- wizard ---------- */
+  toggleWiz(key) { this.mut(s => { const i = s.wiz.indexOf(key); if (i >= 0) s.wiz.splice(i, 1); else s.wiz.push(key); }); }
+  prevStep() { this.say('Step 1 (Module Configuration) is unchanged in this flow'); }
+  editFolders() { this.mut(s => { s.wiz = s.folders.filter(f => f.cap === 'c2').map(f => f.classes.join('|')); s.screen = 'wizard'; s.modal = false; }); }
+  finish() {
+    let msg = null;
+    this.mut(s => {
+      const cap = s.caps.find(c => c.id === 'c2');
+      const cur = s.folders.filter(f => f.cap === 'c2');
+      const curKeys = cur.map(f => f.classes.join('|'));
+      const added = [], removed = [];
+      s.wiz.forEach(k => {
+        if (curKeys.indexOf(k) < 0) {
+          const f = { id: 'f' + (s.seq++), cap: 'c2', classes: k.split('|'), rec: null, created: '10/6/2026', modified: '10/6/2026' };
+          s.folders.push(f); added.push(this.fname(f));
+        }
+      });
+      cur.forEach(f => { if (s.wiz.indexOf(f.classes.join('|')) < 0) { s.folders = s.folders.filter(x => x.id !== f.id); removed.push(this.fname(f)); } });
+      if (added.length || removed.length) {
+        const reason = added.length ? "Folder '" + added[0] + "' added" : "Folder '" + removed[0] + "' removed";
+        if (cap.rec.state === 'generated' || cap.rec.state === 'outdated') { cap.rec = { state: 'outdated', reason: reason }; msg = 'Folders updated · capture 2 recommendations are now outdated'; }
+        else if (cap.rec.state === 'running') { cap.rec.dirty = reason; msg = 'Folders updated · the running recommendation for capture 2 will land as outdated'; }
+        else msg = 'Folders updated for capture 2';
+      }
+      if (s.firstFinish) { s.banner = true; s.firstFinish = false; }
+      s.screen = 'datasets';
+    });
+    if (msg) this.say(msg);
+  }
+
+  /* ---------- datasets ---------- */
+  toggleFolder(id) { this.mut(s => { s.exp[id] = !s.exp[id]; }); }
+  toggleSlot(k) { this.mut(s => { s.expSlot[k] = !s.expSlot[k]; }); }
+  newDataset(s, fid, slot) {
+    const n = s.seq++; const id = 'd' + n;
+    s.datasets.push({ id: id, folder: fid, slot: slot, name: 'upload-' + n });
+    for (let i = 1; i <= 4; i++) s.images.push({ id: id + '-' + i, ds: id, name: 'IMG_' + n + '0' + i + '.png', saved: false, boxes: [] });
+    return id;
+  }
+  addDataset(fid, slot) {
+    let name = '';
+    this.mut(s => { this.newDataset(s, fid, slot); s.exp[fid] = true; s.expSlot[fid + '|' + slot] = true; name = this.fname(s.folders.find(f => f.id === fid)); });
+    this.say("4 images uploaded to '" + name + "' · " + this.SLOTS[slot]);
+  }
+  openDs(dsId) {
+    this.mut(s => {
+      const imgs = s.images.filter(i => i.ds === dsId);
+      const first = imgs.find(i => !i.saved) || imgs[0];
+      s.cur = first.id; s.screen = 'annotate'; s.activeCls = null; s.special = null; s.drag = null; s.modal = false;
+    });
+  }
+  openModal() {
+    this.mut(s => {
+      s.modal = true; s.sel = {};
+      s.caps.forEach(c => { const g = this.group(s, c); if (g === 'ready' || g === 'outdated') s.sel[c.id] = true; });
+    });
+  }
+  closeModal() { this.setState({ modal: false }); }
+  toggleSel(id) { this.mut(s => { s.sel[id] = !s.sel[id]; }); }
+  run() {
+    const ids = Object.keys(this.state.sel).filter(k => this.state.sel[k]);
+    if (!ids.length) return;
+    this.mut(s => {
+      s.caps.forEach(c => { if (ids.indexOf(c.id) >= 0) c.rec = { state: 'running', dirty: null, folders: s.folders.filter(f => f.cap === c.id).map(f => f.id) }; });
+      s.modal = false; s.banner = false;
+    });
+    this.say('Recommender started for ' + ids.length + (ids.length > 1 ? ' captures' : ' capture') + '. You can keep annotating while it runs.');
+    const secs = this.props.runSeconds ?? 8;
+    const t = setTimeout(() => this.finishRun(ids), secs * 1000);
+    this.timers.push(t);
+  }
+  finishRun(ids) {
+    const done = [], stale = [];
+    this.mut(s => {
+      s.caps.forEach(c => {
+        if (ids.indexOf(c.id) < 0 || c.rec.state !== 'running') return;
+        (c.rec.folders || []).forEach(fid => { const f = s.folders.find(x => x.id === fid); if (f) f.rec = this.GEN[fid] || 75; });
+        if (c.rec.dirty) { stale.push(c.name); c.rec = { state: 'outdated', reason: c.rec.dirty }; }
+        else { done.push(c.name); c.rec = { state: 'generated', at: '06 Oct' }; }
+      });
+    });
+    const all = done.concat(stale);
+    if (!all.length) return;
+    this.say('Recommendations ready for ' + all.join(', ') + (stale.length ? ' · ' + stale.join(', ') + ' changed while running, so it is marked outdated' : ''));
+  }
+  annotateCap(capId) {
+    if (capId !== 'c2') return;
+    const s0 = this.state; const cap = s0.caps.find(c => c.id === 'c2');
+    const r = this.readiness(s0, cap);
+    const sp = r.defs.find(d => d.kind !== 'present');
+    if (sp) { this.jumpSpecial(sp.cls, sp.kind); return; }
+    const imgs = this.imgsOfCap(s0, 'c2');
+    const target = imgs.find(i => !i.saved) || imgs[0];
+    if (target) this.goImg(target.id);
+  }
+
+  /* ---------- annotation ---------- */
+  commitCur(s) { const img = s.images.find(i => i.id === s.cur); if (img && img.boxes.length && !img.saved) img.saved = true; }
+  readyToast(before, s, fallback) {
+    if (!before && this.readyNow(s)) this.say('capture 2 now meets every label rule. Run Recommender is ready on Datasets & Annotations.');
+    else if (fallback) this.say(fallback);
+  }
+  goImg(id, mode) {
+    const before = this.readyNow(this.state);
+    const s = this.mut(s => { this.commitCur(s); s.cur = id; s.screen = 'annotate'; s.modal = false; s.drag = null; s.activeCls = null; s.special = mode || null; });
+    this.readyToast(before, s, null);
+  }
+  back() {
+    const before = this.readyNow(this.state);
+    const s = this.mut(s => { this.commitCur(s); s.cur = null; s.screen = 'datasets'; s.activeCls = null; s.special = null; s.drag = null; });
+    this.readyToast(before, s, null);
+  }
+  pick(c) { this.setState({ activeCls: this.state.activeCls === c ? null : c, special: null }); }
+  markSpecial(cls, kind) {
+    const sp = this.state.special;
+    this.setState({ special: sp && sp.cls === cls && sp.kind === kind ? null : { cls: cls, kind: kind }, activeCls: null });
+  }
+  stopDraw() { this.setState({ activeCls: null, special: null, drag: null }); }
+  jumpSpecial(cls, kind) {
+    const s0 = this.state;
+    const list = this.specialImages(s0, 'c2', cls, kind);
+    const img = list.find(i => !i.boxes.some(x => x.cls === cls && this.kindOf(x) === kind)) || list[0];
+    if (img) {
+      this.goImg(img.id, { cls: cls, kind: kind });
+      this.say(kind === 'absent' ? 'Drag a box where ' + this.N[cls] + ' would normally sit' : 'Drag a box around each ' + this.N[cls]);
+      return;
+    }
+    const f = s0.folders.find(f => f.cap === 'c2' && (kind === 'absent' ? f.classes.indexOf(cls) < 0 : f.classes.indexOf(cls) >= 0));
+    if (!f) return;
+    this.mut(s => { this.commitCur(s); s.cur = null; s.screen = 'datasets'; s.modal = false; s.exp[f.id] = true; s.expSlot[f.id + '|0'] = true; });
+    this.say("Upload images to '" + this.fname(f) + "' first: " + this.N[cls] + this.KIND[kind] + ' labels go on its first ' + this.WINDOW + ' images');
+  }
+  pt(e) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const cl = (v) => Math.max(0, Math.min(100, v));
+    return { x: cl((e.clientX - r.left) / r.width * 100), y: cl((e.clientY - r.top) / r.height * 100) };
+  }
+  down(e) {
+    if (!this.state.activeCls && !this.state.special) return;
+    e.preventDefault();
+    const p = this.pt(e);
+    this.setState({ drag: { x0: p.x, y0: p.y, x1: p.x, y1: p.y } });
+  }
+  move(e) {
+    const d = this.state.drag; if (!d) return;
+    const p = this.pt(e);
+    this.setState({ drag: { x0: d.x0, y0: d.y0, x1: p.x, y1: p.y } });
+  }
+  up() {
+    const d = this.state.drag; if (!d) return;
+    let l = Math.min(d.x0, d.x1), t = Math.min(d.y0, d.y1), w = Math.abs(d.x1 - d.x0), h = Math.abs(d.y1 - d.y0);
+    if (w < 1.5 || h < 1.5) { w = 6; h = 10; l = Math.min(l, 94); t = Math.min(t, 90); }
+    const sp = this.state.special;
+    const cls = sp ? sp.cls : this.state.activeCls;
+    this.mut(s => {
+      const img = s.images.find(x => x.id === s.cur);
+      img.boxes.push({ cls: cls, absent: !!sp && sp.kind === 'absent', neg: !!sp && sp.kind === 'neg', l: +l.toFixed(1), t: +t.toFixed(1), w: +w.toFixed(1), h: +h.toFixed(1) });
+      s.drag = null;
+    });
+  }
+  delBox(i) { this.mut(s => { s.images.find(x => x.id === s.cur).boxes.splice(i, 1); }); }
+  copyMaster() {
+    const ctx = this.curCtx(this.state); if (!ctx) return;
+    if (ctx.img.id === 'A1') { this.say('This is the master image'); return; }
+    let copied = 0, skipped = 0;
+    this.mut(s => {
+      const img = s.images.find(i => i.id === s.cur);
+      const master = s.images.find(i => i.id === 'A1');
+      const keep = img.boxes.filter(x => x.absent || x.neg);
+      const add = [];
+      master.boxes.forEach(x => { if (x.absent || x.neg || ctx.folder.classes.indexOf(x.cls) < 0) { skipped++; return; } add.push(Object.assign({}, x)); copied++; });
+      img.boxes = add.concat(keep);
+    });
+    this.say('Copied ' + copied + ' labels from the master image' + (skipped ? ' · skipped ' + skipped + ' (recommender-only labels and classes not in this folder)' : ''));
+  }
+  saveNext() {
+    const ctx = this.curCtx(this.state); if (!ctx) return;
+    if (!ctx.img.boxes.length) { this.say('Add at least one label before saving'); return; }
+    const before = this.readyNow(this.state); let last = false;
+    const s = this.mut(s => {
+      const img = s.images.find(i => i.id === s.cur); img.saved = true;
+      const list = s.images.filter(i => i.ds === img.ds);
+      const idx = list.findIndex(i => i.id === img.id);
+      if (idx < list.length - 1) s.cur = list[idx + 1].id; else last = true;
+      s.drag = null; s.special = null;
+    });
+    this.readyToast(before, s, last ? 'Saved · last image in this dataset' : 'Saved');
+  }
+  stepImg(dir) {
+    const ctx = this.curCtx(this.state); if (!ctx) return;
+    const list = this.state.images.filter(i => i.ds === ctx.img.ds);
+    const idx = list.findIndex(i => i.id === ctx.img.id) + dir;
+    if (idx >= 0 && idx < list.length) this.goImg(list[idx].id);
+  }
+  autoLabel() {
+    const ctx = this.curCtx(this.state); if (!ctx) return;
+    const r = this.readiness(this.state, ctx.cap);
+    this.mut(s => {
+      const img = s.images.find(i => i.id === s.cur); const boxes = [];
+      const eligible = (c, kind) => this.specialImages(this.state, ctx.cap.id, c, kind).some(i => i.id === ctx.img.id);
+      const unmet = (c, kind) => { const rule = r.rules.find(x => x.cls === c && x.kind === kind); return rule && !rule.ok; };
+      ctx.folder.classes.forEach(c => {
+        const isNeg = (ctx.cap.neg || []).indexOf(c) >= 0;
+        if (isNeg && !(eligible(c, 'neg') && unmet(c, 'neg'))) return;
+        (this.POS[c] || []).forEach(p => boxes.push(Object.assign({ cls: c, absent: false, neg: isNeg }, p)));
+      });
+      (ctx.cap.absent || []).forEach(c => {
+        if (eligible(c, 'absent') && unmet(c, 'absent')) boxes.push(Object.assign({ cls: c, absent: true, neg: false }, this.POS[c][0]));
+      });
+      img.boxes = boxes;
+    });
+    this.say('Labels added. Press Save & Next to count them.');
+  }
+  fillReady() {
+    const before = this.readyNow(this.state);
+    const b = (cls, i, kind) => Object.assign({ cls: cls, absent: kind === 'absent', neg: kind === 'neg' }, this.POS[cls][i]);
+    const s = this.mut(s => {
+      const imgsOf = (fid) => {
+        let d = s.datasets.find(x => x.folder === fid);
+        if (!d) { const id = this.newDataset(s, fid, 0); d = s.datasets.find(x => x.id === id); }
+        return s.images.filter(i => i.ds === d.id);
+      };
+      const set = (img, boxes) => { img.boxes = boxes; img.saved = true; };
+      const A = s.images.filter(i => i.ds === 'd1');
+      set(A[2], [b('odc1', 0), b('odc2', 0), b('odc2', 1), b('odc3', 0), b('odc3', 1)]);
+      if (s.folders.find(f => f.id === 'fB')) { imgsOf('fB').slice(0, 3).forEach(im => set(im, [b('odc1', 0), b('odc2', 0), b('odc3', 0, 'absent')])); s.exp.fB = true; s.expSlot['fB|0'] = true; }
+      if (s.folders.find(f => f.id === 'fC')) { imgsOf('fC').slice(0, 3).forEach(im => set(im, [b('odc1', 0), b('odc3', 0), b('odc4', 0, 'neg'), b('odc4', 1, 'neg')])); s.exp.fC = true; s.expSlot['fC|0'] = true; }
+    });
+    if (this.readyNow(s)) this.say(before ? 'capture 2 already met every rule' : 'capture 2 now meets every label rule. Open Run Recommender.');
+    else this.say('Labels added');
+  }
+  reset() { this.timers.forEach(t => clearTimeout(t)); this.timers = []; this.setState(this.initial()); }
+
+  /* ---------- view model ---------- */
+  countDs(s, dss) {
+    let a = 0, t = 0;
+    dss.forEach(d => {
+      if (d.sTot != null) { a += d.sAnn; t += d.sTot; }
+      else { const im = s.images.filter(i => i.ds === d.id); t += im.length; a += im.filter(i => i.saved).length; }
+    });
+    return { a: a, t: t };
+  }
+  annStyle(c) { return (c.t > 0 && c.a === c.t) ? 'color:#1E8E4A;' : 'color:#B7791F;'; }
+  buildRows(s) {
+    const out = [];
+    const base = { isFolder: false, isSlot: false, isDs: false, isAdd: false, variant: '', capture: '', name: '', indent: 12, chips: [], recDash: false, recNum: false, recRun: false, recOld: false, recText: '', oldStrike: '', reason: '', ann: '', annStyle: '', created: '', modified: '', canEdit: false, bg: '', chevRot: '', expanded: 'false', expLabel: '', hasImgs: false };
+    s.caps.forEach(cap => {
+      const rec = cap.rec;
+      s.folders.filter(f => f.cap === cap.id).forEach(f => {
+        const dss = s.datasets.filter(d => d.folder === f.id);
+        const cnt = this.countDs(s, dss);
+        const open = !!s.exp[f.id];
+        const hasNum = f.rec != null;
+        out.push(Object.assign({}, base, {
+          isFolder: true, variant: cap.variant, capture: cap.name, name: this.fname(f), chips: this.chips(f.classes),
+          toggle: () => this.toggleFolder(f.id), chevRot: open ? 'transform: rotate(90deg);' : '', expanded: open ? 'true' : 'false', expLabel: (open ? 'Collapse ' : 'Expand ') + this.fname(f),
+          recDash: rec.state === 'none' || (rec.state === 'generated' && !hasNum),
+          recNum: rec.state === 'generated' && hasNum, recRun: rec.state === 'running',
+          recOld: rec.state === 'outdated', recText: hasNum ? String(f.rec) : '—', oldStrike: hasNum ? 'text-decoration: line-through;' : '', reason: rec.reason || '',
+          ann: cnt.a + '/' + cnt.t, annStyle: this.annStyle(cnt), created: f.created, modified: f.modified,
+          canEdit: cap.id === 'c2', edit: () => this.editFolders(), bg: open ? 'background:#FFFBF8;' : ''
+        }));
+        if (!open) return;
+        this.SLOTS.forEach((label, si) => {
+          const key = f.id + '|' + si;
+          const sopen = !!s.expSlot[key];
+          const sd = dss.filter(d => d.slot === si);
+          const sc = this.countDs(s, sd);
+          out.push(Object.assign({}, base, {
+            isSlot: true, name: label, indent: 40, toggle: () => this.toggleSlot(key), chevRot: sopen ? 'transform: rotate(90deg);' : '',
+            expanded: sopen ? 'true' : 'false', expLabel: (sopen ? 'Collapse ' : 'Expand ') + label, recDash: true,
+            ann: sc.a + '/' + sc.t, annStyle: this.annStyle(sc), created: f.created, modified: f.modified, bg: 'background:#FCFCFD;'
+          }));
+          if (!sopen) return;
+          sd.forEach(d => {
+            const dc = this.countDs(s, [d]);
+            out.push(Object.assign({}, base, {
+              isDs: true, name: d.name, indent: 76, hasImgs: d.sTot == null, open: () => this.openDs(d.id), recDash: true,
+              ann: dc.a + '/' + dc.t, annStyle: this.annStyle(dc), created: f.created, modified: f.modified, bg: 'background:#FCFCFD;'
+            }));
+          });
+          if (cap.id === 'c2') out.push(Object.assign({}, base, { isAdd: true, indent: 76, add: () => this.addDataset(f.id, si), bg: 'background:#FCFCFD;' }));
+        });
+      });
+    });
+    return out;
+  }
+  buildGroups(s) {
+    const defs = [
+      ['ready', 'Ready to run', 'all label rules met, not run yet'],
+      ['outdated', 'Outdated', 'something changed since the last run'],
+      ['running', 'Running', 'results fill the Recommended column'],
+      ['notready', 'Not ready', 'more labels needed'],
+      ['uptodate', 'Up to date', 'nothing to re-run']
+    ];
+    const by = {}; defs.forEach(d => { by[d[0]] = []; });
+    s.caps.forEach(c => {
+      const g = this.group(s, c); const r = this.readiness(s, c);
+      const nF = s.folders.filter(f => f.cap === c.id).length;
+      const selectable = g === 'ready' || g === 'outdated';
+      const checked = !!s.sel[c.id];
+      let meta = '';
+      if (g === 'ready') meta = nF + (nF === 1 ? ' folder' : ' folders') + ' · all label rules met';
+      else if (g === 'outdated') meta = c.rec.reason;
+      else if (g === 'running') meta = 'Running in the background' + (c.rec.dirty ? ' · folders changed meanwhile, result will land as outdated' : '');
+      else if (g === 'uptodate') meta = 'Generated ' + c.rec.at + ' · no changes since';
+      else meta = c.rec.state === 'outdated' ? 'Outdated, and more labels are needed before it can re-run' : 'More labels needed before it can run';
+      by[g].push({
+        cid: 'sel-' + c.id, name: c.variant + ' · ' + c.name, meta: meta, selectable: selectable, checked: checked,
+        toggle: () => this.toggleSel(c.id), icRun: g === 'running', icOk: g === 'uptodate', icNo: g === 'notready',
+        hasDef: g === 'notready', defs: r.defs.map(d => ({ text: this.N[d.cls] + this.KIND[d.kind] + ' · ' + d.n + ' more', style: this.chipStyle(d.cls, d.kind !== 'present') })),
+        canAnnotate: g === 'notready' && !!c.live, annotate: () => this.annotateCap(c.id),
+        cardStyle: selectable && checked ? 'border-color:#FFB48F; background:#FFF8F4;' : ''
+      });
+    });
+    return defs.filter(d => by[d[0]].length).map(d => ({ title: d[1], desc: d[2], count: by[d[0]].length, rows: by[d[0]] }));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const runSecs = this.props.runSeconds ?? 8;
+    const v = {
+      isWizard: s.screen === 'wizard', isDatasets: s.screen === 'datasets', isAnnot: s.screen === 'annotate',
+      runSecs: runSecs, modal: s.modal, hasToast: !!s.toast, toast: s.toast || '',
+      fillReady: () => this.fillReady(), autoLabel: () => this.autoLabel(), reset: () => this.reset()
+    };
+
+    // wizard
+    const c2 = s.caps.find(c => c.id === 'c2');
+    v.classRows = ['odc2', 'odc1', 'odc3'].map(c => {
+      const negs = (c2.neg || []).filter(n => c2.negOf[n] === c);
+      return { name: this.N[c], absent: c2.absent.indexOf(c) >= 0, absentLabel: 'Absent case for ' + this.N[c], hasNeg: negs.length > 0, noNeg: negs.length === 0, negChips: this.chips(negs) };
+    });
+    v.wizFolders = s.wiz.map(k => {
+      const lock = this.wizLock(s, k);
+      return { name: k.split('|').map(c => this.N[c]).join(' & '), chips: this.chips(k.split('|')), locked: !!lock, lockReason: lock || 'Remove folder', delLabel: 'Remove folder ' + k.split('|').map(c => this.N[c]).join(' & '), del: () => this.toggleWiz(k) };
+    });
+    v.wizCombos = this.COMBOS.map((k, i) => {
+      const checked = s.wiz.indexOf(k) >= 0;
+      const lock = checked ? this.wizLock(s, k) : '';
+      return { id: 'combo-' + i, chips: this.chips(k.split('|')), checked: checked, locked: !!lock, lockReason: lock, toggle: () => this.toggleWiz(k) };
+    });
+    v.prevStep = () => this.prevStep(); v.finish = () => this.finish();
+
+    // datasets
+    v.showBanner = s.banner; v.dismissBanner = () => this.setState({ banner: false });
+    v.filters = [{ label: 'Variant Name', n: 0 }, { label: 'Capture', n: 0 }, { label: 'Dataset Folder', n: 0 }, { label: 'Is Deleted', n: 1 }];
+    let readyN = 0, runN = 0;
+    s.caps.forEach(c => { const g = this.group(s, c); if (g === 'ready' || g === 'outdated') readyN++; if (g === 'running') runN++; });
+    v.readyText = readyN + ' ready';
+    v.readyPillStyle = readyN ? 'background:#FFFFFF; color:#B33300;' : 'background:rgba(255,255,255,0.3); color:#FFFFFF;';
+    v.anyRunning = runN > 0; v.runningText = runN + (runN > 1 ? ' captures running' : ' capture running');
+    v.openModal = () => this.openModal();
+    v.rows = s.screen === 'datasets' ? this.buildRows(s) : [];
+
+    // modal
+    v.groups = s.modal ? this.buildGroups(s) : [];
+    const selN = Object.keys(s.sel).filter(k => s.sel[k]).length;
+    v.selText = selN ? selN + (selN > 1 ? ' captures' : ' capture') + ' selected · runs in the background' : 'Select at least one capture';
+    v.runText = 'Run for ' + selN + (selN === 1 ? ' capture' : ' captures');
+    v.runDisabled = selN === 0;
+    v.runStyle = selN ? 'background:#FF4A00; color:#FFFFFF; cursor:pointer;' : 'background:#E4E4E7; color:#A1A1AA; cursor:not-allowed;';
+    v.run = () => this.run(); v.closeModal = () => this.closeModal();
+
+    // annotation
+    const ctx = s.screen === 'annotate' ? this.curCtx(s) : null;
+    Object.assign(v, {
+      folderName: '', dsName: '', imgName: '', folderChips: [], absentChips: [], hasAbsentChips: false, absentNeeded: false, absentHint: '', clsChips: [], boxList: [], noBoxes: true,
+      pager: [], prevDisabled: true, nextDisabled: true, rangeText: '', hintText: '', hintStyle: '', drawing: false, cursor: '', boxes: [], hasDrag: false, dragStyle: '',
+      hasOdc2: true, hasOdc3: true, hasOdc4: false
+    });
+    v.back = () => this.back(); v.copyMaster = () => this.copyMaster(); v.saveNext = () => this.saveNext();
+    v.prevImg = () => this.stepImg(-1); v.nextImg = () => this.stepImg(1); v.stopDraw = () => this.stopDraw();
+    v.down = (e) => this.down(e); v.move = (e) => this.move(e); v.up = () => this.up();
+    if (ctx) {
+      const img = ctx.img, folder = ctx.folder, cap = ctx.cap;
+      v.folderName = this.fname(folder); v.dsName = ctx.ds.name; v.imgName = img.name; v.folderChips = this.chips(folder.classes);
+      v.hasOdc2 = folder.classes.indexOf('odc2') >= 0; v.hasOdc3 = folder.classes.indexOf('odc3') >= 0; v.hasOdc4 = folder.classes.indexOf('odc4') >= 0;
+      // Recommender-only chips (absent / negative): shown only on the first WINDOW eligible images of
+      // the capture. The count includes this image's unsaved boxes so it moves as the user draws.
+      const r = this.readiness(s, cap);
+      const savedImgs = this.imgsOfCap(s, cap.id).filter(i => i.saved);
+      const items = [];
+      (cap.absent || []).forEach(c => items.push({ c: c, kind: 'absent' }));
+      (cap.neg || []).forEach(c => items.push({ c: c, kind: 'neg' }));
+      v.absentChips = items.filter(it => this.specialImages(s, cap.id, it.c, it.kind).some(i => i.id === img.id)).map(it => {
+        const c = it.c, kind = it.kind, k = this.CL[c];
+        const have = this.countKind(savedImgs, c, kind) + (img.saved ? 0 : this.countKind([img], c, kind));
+        const need = this.NEED[kind];
+        const short = have < need;
+        const sp = s.special; const on = !!sp && sp.cls === c && sp.kind === kind;
+        const border = kind === 'absent' ? 'dashed' : 'dotted';
+        return {
+          label: this.N[c] + this.KIND[kind] + '  ' + Math.min(have, need) + '/' + need, needed: short,
+          pick: () => this.markSpecial(c, kind), pressed: on ? 'true' : 'false',
+          title: (kind === 'absent' ? 'Box where ' + this.N[c] + ' would normally sit. ' : 'Box each ' + this.N[c] + ' on the image. ') + (short ? need + ' needed in this capture to run the recommender. ' : 'Requirement met; more are optional. ') + 'Recommender only: not used for training and never blocks saving.',
+          style: (short ? 'background:#FFFFFF; color:' + k.fg + '; border:1.5px ' + border + ' ' + k.box + ';' : 'background:#FFFFFF; color:#71717A; border:1.5px ' + border + ' #C4C4CC;') + (on ? ' box-shadow: 0 0 0 2px ' + k.box + '; font-weight: 700;' : '')
+        };
+      });
+      v.hasAbsentChips = v.absentChips.length > 0;
+      v.absentNeeded = v.hasAbsentChips;
+      v.absentHint = 'Labels after the divider are for the recommender only. They are not used for training and never block saving.';
+      v.clsChips = cap.classes.map(c => {
+        const on = s.activeCls === c;
+        return { label: this.N[c], pick: () => this.pick(c), pressed: on ? 'true' : 'false', style: this.chipStyle(c, false) + (on ? ' box-shadow: 0 0 0 2px ' + this.CL[c].box + '; font-weight: 700;' : '') };
+      });
+      const lineOf = (kind) => kind === 'absent' ? 'dashed' : (kind === 'neg' ? 'dotted' : 'solid');
+      v.boxList = img.boxes.map((x, i) => ({ num: i + 1, label: this.N[x.cls] + this.KIND[this.kindOf(x)], style: this.chipStyle(x.cls, this.kindOf(x) !== 'present'), del: () => this.delBox(i), delLabel: 'Delete label ' + (i + 1) }));
+      v.noBoxes = img.boxes.length === 0;
+      v.boxes = img.boxes.map((x, i) => {
+        const col = this.CL[x.cls].box; const kind = this.kindOf(x); const special = kind !== 'present';
+        const pos = x.t < 8 ? 'top: 2px; left: 2px;' : 'top: -22px; left: -2px;';
+        return {
+          style: 'left:' + x.l + '%; top:' + x.t + '%; width:' + x.w + '%; height:' + x.h + '%; border:' + (kind === 'neg' ? 3 : 2) + 'px ' + lineOf(kind) + ' ' + col + ';' + (special ? ' background: rgba(255,255,255,0.10);' : ''),
+          text: (i + 1) + '. ' + this.N[x.cls] + this.KIND[kind],
+          labelStyle: pos + (special ? ' background:#FFFFFF; color:' + col + '; border:1px ' + lineOf(kind) + ' ' + col + ';' : ' background:' + col + '; color:#FFFFFF;')
+        };
+      });
+      if (s.drag) {
+        const d = s.drag; const sp = s.special; const col = this.CL[sp ? sp.cls : s.activeCls].box;
+        v.hasDrag = true;
+        v.dragStyle = 'left:' + Math.min(d.x0, d.x1) + '%; top:' + Math.min(d.y0, d.y1) + '%; width:' + Math.abs(d.x1 - d.x0) + '%; height:' + Math.abs(d.y1 - d.y0) + '%; border:2px ' + lineOf(sp ? sp.kind : 'present') + ' ' + col + '; background: rgba(255,255,255,0.12);';
+      }
+      const list = s.images.filter(i => i.ds === img.ds);
+      const idx = list.findIndex(i => i.id === img.id);
+      v.pager = list.map((im, i) => ({
+        num: i + 1, go: () => this.goImg(im.id), current: i === idx ? 'page' : 'false', label: 'Image ' + (i + 1) + (im.saved ? ', annotated' : ''),
+        style: i === idx ? 'font-weight:700; color:#18181B; border-bottom:2px solid #FF4A00;' : (im.saved ? 'color:#1E8E4A; font-weight:600;' : 'color:#71717A;')
+      }));
+      v.prevDisabled = idx <= 0; v.nextDisabled = idx >= list.length - 1;
+      v.rangeText = 'Range: 1 to ' + list.length;
+      if (s.special) {
+        const nm = this.N[s.special.cls];
+        v.hintText = s.special.kind === 'absent'
+          ? 'Marking ' + nm + ' · absent: drag a box where ' + nm + ' would normally sit. Recommender only, stripped from training.'
+          : 'Marking ' + nm + ' · negative: drag a box around each ' + nm + '. Recommender only, stripped from training.';
+        v.hintStyle = 'background:#EEF0FF; color:#33308F; border:1px ' + (s.special.kind === 'absent' ? 'dashed' : 'dotted') + ' #7B78D6;';
+      } else if (s.activeCls) {
+        v.hintText = 'Drawing ' + this.N[s.activeCls] + ': drag on the image to add a box';
+        v.hintStyle = 'background:' + this.CL[s.activeCls].bg + '; color:' + this.CL[s.activeCls].fg + '; border:1px solid ' + this.CL[s.activeCls].bd + ';';
+      } else {
+        v.hintText = 'Pick a class on the left, then drag on the image to label it';
+        v.hintStyle = 'background:#F4F4F5; color:#52525B; border:1px solid #E4E4E7;';
+      }
+      v.drawing = !!(s.activeCls || s.special);
+      v.cursor = v.drawing ? 'cursor: crosshair;' : 'cursor: default;';
+    }
+    return v;
+  }
+}
+
+
+var q = new URLSearchParams(location.search);
+mountDC(Component, { runSeconds: q.get('run') ? Number(q.get('run')) : undefined });
+</script>
+</body>
+</html>
