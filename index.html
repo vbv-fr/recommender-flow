@@ -1249,7 +1249,7 @@ class Component extends DCLogic {
     v.allChecked = selIds.length > 0 && selN === selIds.length; v.noneSelectable = selIds.length === 0;
     v.toggleAll = () => this.toggleAll();
     v.selText = selN ? selN + (selN > 1 ? ' captures' : ' capture') + ' selected' : 'Select at least one capture';
-    v.runText = 'Next';
+    v.runText = 'Run Recommender';
     v.runDisabled = selN === 0;
     v.runStyle = selN ? 'background:#FF4A00; color:#FFFFFF; cursor:pointer;' : 'background:#E4E4E7; color:#A1A1AA; cursor:not-allowed;';
     v.run = () => this.run(); v.closeModal = () => this.closeModal();
