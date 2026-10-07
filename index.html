@@ -23,6 +23,9 @@ a{color:#D63F00}a:hover{color:#A83200}
 .pbtn{height:28px;padding:0 10px;border:1px solid #C9C9CF;background:#fff;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:#3F3F46}
 .pbtn:hover{border-color:#FF4A00;color:#C23A00}
 .trow:hover{background:#FFF8F4}
+.tip{position:relative;display:inline-flex;cursor:help;outline:none}
+.tipbox{display:none;position:absolute;bottom:calc(100% + 8px);right:-8px;width:240px;background:#18181B;color:#fff;font-size:12px;font-weight:500;line-height:1.4;padding:8px 10px;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.2);z-index:5}
+.tip:hover .tipbox,.tip:focus .tipbox{display:block}
 .qr{background-color:#fff;background-image:repeating-linear-gradient(0deg,#1f1f1f 0 4px,transparent 4px 9px),repeating-linear-gradient(90deg,#1f1f1f 0 4px,transparent 4px 10px)}
 </style>
 </head>
@@ -270,11 +273,12 @@ Run Recommender
 <div role="dialog" aria-modal="true" aria-labelledby="rr-title" style="width: 100%; max-width: 720px; background: #FFFFFF; border-radius: 12px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column">
 <div style="display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 12px; border-bottom: 1px solid #EFEFF1">
 <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
-<h3 id="rr-title" style="margin: 0; font-size: 18px; font-weight: 700">Run Data Recommender</h3>
-<p style="margin: 0; font-size: 13px; color: #52525B">Runs per capture and takes a few minutes. You can keep annotating while it runs.</p>
+<h3 id="rr-title" style="margin: 0; font-size: 18px; font-weight: 700">{{modalTitle}}</h3>
+<p style="margin: 0; font-size: 13px; color: #52525B">{{modalSub}}</p>
 </div>
 <button class="ibtn" aria-label="Close" onClick="{{closeModal}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
 </div>
+<sc-if value="{{isSelect}}" hint-placeholder-val="{{true}}">
 <div style="padding: 10px 20px; background: #FAFAFA; border-bottom: 1px solid #EFEFF1; font-size: 12px; color: #52525B">Rules per capture: each class needs <strong>5</strong> labelled instances. Each absent class needs <strong>3</strong> absent labels, placed within the first 5 images without it. Each negative class needs <strong>5</strong> negative labels, placed within the first 5 images of its folder.</div>
 <div style="padding: 14px 20px; max-height: 520px; overflow-y: auto">
 <div role="table" aria-label="Captures" style="border: 1px solid #EAEAEC; border-radius: 10px; overflow: hidden">
@@ -305,8 +309,54 @@ Run Recommender
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFEFF1">
 <span style="flex: 1; font-size: 13px; color: #52525B">{{selText}}</span>
 <button onClick="{{closeModal}}" style="height: 38px; padding: 0 16px; border: 1px solid #D4D4D8; background: #FFFFFF; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer">Cancel</button>
+<sc-if value="{{showAdvanced}}" hint-placeholder-val="{{false}}">
+<span style="display: inline-flex; align-items: center; gap: 6px">
+<button onClick="{{setupAdvanced}}" style="height: 38px; padding: 0 16px; border: 1px solid #FF4A00; background: #FFFFFF; color: #D63F00; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer">Setup Advanced Mode</button>
+<span class="tip" tabindex="0" aria-label="Gives optimised recommendation counts by combining captures with overlapping classes"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M12 11v6M12 7.5v.01"></path></svg><span class="tipbox" role="tooltip">Gives optimised recommendation counts by combining captures with overlapping classes</span></span>
+</span>
+</sc-if>
 <button onClick="{{run}}" disabled="{{runDisabled}}" style="height: 38px; padding: 0 18px; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; {{runStyle}}">{{runText}}</button>
 </div>
+</sc-if>
+<sc-if value="{{isAdvanced}}" hint-placeholder-val="{{false}}">
+<div style="padding: 14px 20px; display: flex; flex-direction: column; gap: 12px; max-height: 560px; overflow-y: auto">
+<sc-if value="{{hasPool}}" hint-placeholder-val="{{false}}">
+<div style="border: 1px dashed #F0A37E; border-radius: 10px; background: #FFF8F4">
+<div style="padding: 9px 14px; font-size: 13px; font-weight: 700; color: #B23400; border-bottom: 1px dashed #F6C9B4">Unassigned</div>
+<sc-for list="{{pool}}" as="u">
+<div style="display: flex; align-items: center; gap: 10px; padding: 9px 14px; flex-wrap: wrap">
+<span style="font-weight: 700; font-size: 13px; min-width: 140px">{{u.name}}</span>
+<span style="display: flex; gap: 4px; flex: 1; flex-wrap: wrap"><sc-for list="{{u.chips}}" as="c"><span class="chip" style="{{c.style}}">{{c.label}}</span></sc-for></span>
+<select aria-label="{{u.pickLabel}}" value="" onChange="{{u.pick}}" style="height: 32px; padding: 0 8px; border: 1px solid #D4D4D8; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 600; background: #FFFFFF; cursor: pointer">
+<option value="">Assign to…</option>
+<sc-for list="{{u.options}}" as="o"><option value="{{o.value}}">{{o.label}}</option></sc-for>
+</select>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-for list="{{advGroups}}" as="g" hint-placeholder-count="2">
+<div style="border: 1px solid #EAEAEC; border-radius: 10px; overflow: hidden">
+<div style="display: flex; align-items: baseline; gap: 10px; padding: 9px 14px; background: #FAFAFA; border-bottom: 1px solid #EFEFF1">
+<span style="font-size: 13px; font-weight: 700">{{g.title}}</span>
+<span style="font-size: 12px; {{g.noteStyle}}">{{g.note}}</span>
+</div>
+<sc-for list="{{g.members}}" as="m">
+<div style="display: flex; align-items: center; gap: 10px; padding: 9px 8px 9px 14px; border-top: 1px solid #F4F4F5; flex-wrap: wrap">
+<span style="font-weight: 700; font-size: 13px; min-width: 140px">{{m.name}}</span>
+<span style="display: flex; gap: 4px; flex: 1; flex-wrap: wrap"><sc-for list="{{m.chips}}" as="c"><span class="chip" style="{{c.style}}">{{c.label}}</span></sc-for></span>
+<button class="ibtn" aria-label="{{m.removeLabel}}" title="Unassign" onClick="{{m.remove}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFEFF1">
+<span style="flex: 1; font-size: 13px; color: #52525B">{{advText}}</span>
+<button onClick="{{backToSelect}}" style="height: 38px; padding: 0 16px; border: 1px solid #D4D4D8; background: #FFFFFF; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer">Back</button>
+<sc-if value="{{allAssigned}}" hint-placeholder-val="{{false}}"><button onClick="{{runAdvanced}}" style="height: 38px; padding: 0 18px; border: 0; border-radius: 8px; font-weight: 700; font-size: 14px; background: #FF4A00; color: #FFFFFF; cursor: pointer">Run Advanced Mode</button></sc-if>
+</div>
+</sc-if>
 </div>
 </div>
 </sc-if>
@@ -399,7 +449,7 @@ Run Recommender
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.N = { odc1: 'odc 1', odc2: 'odc 2', odc3: 'odc3', odc4: 'odc4', text: 'text', scratch: 'scratch', dent: 'dent', burr: 'burr' };
+    this.N = { odc1: 'A', odc2: 'B', odc3: 'C', odc4: 'H', clsD: 'D', clsE: 'E', clsF: 'F', clsG: 'G' };
     this.NEED = { present: 5, absent: 3, neg: 5 };
     this.WINDOW = 5;
     this.CL = {
@@ -410,7 +460,11 @@ class Component extends DCLogic {
       text: { fg: '#1D5BA8', bg: '#E4EEFB', bd: '#A6C4EC', box: '#2F6FD0' },
       scratch: { fg: '#7A4E00', bg: '#FDF1D8', bd: '#EBCB84', box: '#C98A00' },
       dent: { fg: '#0B6464', bg: '#DDF3F2', bd: '#8FD0CC', box: '#0E8C8C' },
-      burr: { fg: '#4B4B52', bg: '#EFEFF1', bd: '#CDCDD3', box: '#71717A' }
+      burr: { fg: '#4B4B52', bg: '#EFEFF1', bd: '#CDCDD3', box: '#71717A' },
+      clsD: { fg: '#1D5BA8', bg: '#E4EEFB', bd: '#A6C4EC', box: '#2F6FD0' },
+      clsE: { fg: '#7A4E00', bg: '#FDF1D8', bd: '#EBCB84', box: '#C98A00' },
+      clsF: { fg: '#0B6464', bg: '#DDF3F2', bd: '#8FD0CC', box: '#0E8C8C' },
+      clsG: { fg: '#4B4B52', bg: '#EFEFF1', bd: '#CDCDD3', box: '#71717A' }
     };
     this.POS = {
       odc1: [{ l: 77.5, t: 7, w: 10, h: 23 }, { l: 90.5, t: 75, w: 9, h: 23 }],
@@ -418,7 +472,7 @@ class Component extends DCLogic {
       odc3: [{ l: 54.5, t: 65, w: 4.5, h: 6 }, { l: 39.5, t: 65, w: 4.5, h: 6 }],
       odc4: [{ l: 30.5, t: 39, w: 7, h: 12 }, { l: 11, t: 51, w: 7, h: 12 }]
     };
-    this.GEN = { fA: 180, fB: 120, fC: 110, f3: 60, f4: 140, f5: 220, f6: 95, f7: 110 };
+    this.GEN = { fA: 180, fB: 120, fC: 110, f1: 150, f2: 210, f3: 130, f4: 170, f5: 90, f6: 160 };
     this.SLOTS = ['00:00 - 06:00', '06:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00'];
     this.COMBOS = ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3', 'odc1|odc4'];
     this.KIND = { absent: ' · absent', neg: ' · negative', present: '' };
@@ -434,33 +488,30 @@ class Component extends DCLogic {
     return {
       screen: 'wizard', modal: false, banner: false, toast: null, firstFinish: true,
       caps: [
-        { id: 'c1', variant: 'variant 1', name: 'capture 1', classes: ['odc1', 'text'], absent: [], live: false, staticReady: false, deficits: [{ cls: 'odc1', n: 3 }, { cls: 'text', n: 5 }], rec: { state: 'none' } },
+        { id: 'c1', variant: 'variant 1', name: 'capture 1', classes: ['odc1', 'odc2'], absent: [], live: false, staticReady: true, rec: { state: 'none' } },
         { id: 'c2', variant: 'variant 1', name: 'capture 2', classes: ['odc1', 'odc2', 'odc3'], absent: ['odc3'], neg: ['odc4'], negOf: { odc4: 'odc2' }, live: true, rec: { state: 'none' } },
-        { id: 'c3', variant: 'variant 1', name: 'Test Capture', classes: ['odc1'], absent: [], live: false, staticReady: true, rec: { state: 'none' } },
-        { id: 'c4', variant: 'variant 2', name: 'Top view', classes: ['scratch', 'dent'], absent: [], live: false, staticReady: true, rec: { state: 'generated', at: '02 Oct' } },
-        { id: 'c5', variant: 'variant 2', name: 'Side view', classes: ['dent', 'burr'], absent: [], live: false, staticReady: true, rec: { state: 'outdated', reason: "Folder 'dent & burr' added after the last run" } }
+        { id: 'c3', variant: 'variant 1', name: 'capture 3', classes: ['clsD', 'clsE', 'clsF'], absent: [], live: false, staticReady: true, rec: { state: 'none' } },
+        { id: 'c4', variant: 'variant 1', name: 'capture 4', classes: ['clsE', 'clsF', 'clsG'], absent: [], live: false, staticReady: true, rec: { state: 'outdated', reason: "Folder 'E & F & G' added after the last run" } }
       ],
       folders: [
         fo('f1', 'c1', ['odc1'], null, '9/8/2026'),
-        fo('f2', 'c1', ['odc1', 'text'], null, '9/8/2026'),
+        fo('f2', 'c1', ['odc1', 'odc2'], null, '9/8/2026'),
         fo('fA', 'c2', ['odc1', 'odc2', 'odc3'], null, '10/5/2026'),
         fo('fB', 'c2', ['odc1', 'odc2'], null, '10/5/2026'),
         fo('fC', 'c2', ['odc1', 'odc4', 'odc3'], null, '10/5/2026'),
-        fo('f3', 'c3', ['odc1'], null, '7/14/2026'),
-        fo('f4', 'c4', ['scratch'], 140, '9/22/2026'),
-        fo('f5', 'c4', ['scratch', 'dent'], 220, '9/22/2026'),
-        fo('f6', 'c5', ['dent'], 90, '9/22/2026'),
-        fo('f7', 'c5', ['dent', 'burr'], null, '10/1/2026')
+        fo('f3', 'c3', ['clsD', 'clsE'], null, '7/14/2026'),
+        fo('f4', 'c3', ['clsD', 'clsE', 'clsF'], null, '7/14/2026'),
+        fo('f5', 'c4', ['clsE', 'clsF'], 90, '9/22/2026'),
+        fo('f6', 'c4', ['clsE', 'clsF', 'clsG'], null, '10/1/2026')
       ],
       datasets: [
-        { id: 'dx1', folder: 'f1', slot: 0, name: 'batch-1', sAnn: 2, sTot: 4 },
-        { id: 'dx2', folder: 'f2', slot: 0, name: 'batch-1', sAnn: 1, sTot: 3 },
+        { id: 'dx1', folder: 'f1', slot: 0, name: 'batch-1', sAnn: 12, sTot: 12 },
+        { id: 'dx2', folder: 'f2', slot: 0, name: 'batch-1', sAnn: 18, sTot: 18 },
         { id: 'd1', folder: 'fA', slot: 0, name: 'hbj' },
         { id: 'dx3', folder: 'f3', slot: 1, name: 'line-cam', sAnn: 13, sTot: 13 },
-        { id: 'dx4', folder: 'f4', slot: 0, name: 'top-01', sAnn: 40, sTot: 40 },
-        { id: 'dx5', folder: 'f5', slot: 0, name: 'top-02', sAnn: 52, sTot: 52 },
-        { id: 'dx6', folder: 'f6', slot: 2, name: 'side-01', sAnn: 30, sTot: 30 },
-        { id: 'dx7', folder: 'f7', slot: 2, name: 'side-02', sAnn: 0, sTot: 12 }
+        { id: 'dx4', folder: 'f4', slot: 1, name: 'line-cam', sAnn: 21, sTot: 21 },
+        { id: 'dx5', folder: 'f5', slot: 2, name: 'side-01', sAnn: 30, sTot: 30 },
+        { id: 'dx6', folder: 'f6', slot: 2, name: 'side-02', sAnn: 16, sTot: 16 }
       ],
       images: [
         { id: 'A1', ds: 'd1', name: 'Test Image 1.png', saved: true, boxes: [b('odc1', 0), b('odc1', 1), b('odc2', 0), b('odc3', 0)] },
@@ -468,7 +519,7 @@ class Component extends DCLogic {
         { id: 'A3', ds: 'd1', name: 'Test Image 3.png', saved: false, boxes: [] }
       ],
       exp: { fA: true }, expSlot: { 'fA|0': true },
-      cur: null, activeCls: null, drag: null, sel: {},
+      cur: null, activeCls: null, drag: null, sel: {}, step: 'select', groups: [], pool: [],
       wiz: ['odc1|odc2|odc3', 'odc1|odc2', 'odc1|odc4|odc3'], seq: 10, special: null
     };
   }
@@ -595,7 +646,7 @@ class Component extends DCLogic {
   }
   openModal() {
     this.mut(s => {
-      s.modal = true; s.sel = {};
+      s.modal = true; s.sel = {}; s.step = 'select'; s.groups = []; s.pool = [];
     });
   }
   closeModal() { this.setState({ modal: false }); }
@@ -607,13 +658,52 @@ class Component extends DCLogic {
       s.sel = {}; if (!all) ids.forEach(id => { s.sel[id] = true; });
     });
   }
+  overlaps(s, a, b) {
+    const A = s.caps.find(c => c.id === a), B = s.caps.find(c => c.id === b);
+    return A.classes.some(x => B.classes.indexOf(x) >= 0);
+  }
+  selIds(s) { return s.caps.filter(c => this.selectable(s, c) && s.sel[c.id]).map(c => c.id); }
+  hasOverlap(s) { const ids = this.selIds(s); return ids.some((a, i) => ids.slice(i + 1).some(b => this.overlaps(s, a, b))); }
+  // Default groups = captures linked by shared classes (connected components); a capture with no overlap sits alone.
+  setupAdvanced() {
+    this.mut(s => {
+      const left = this.selIds(s), groups = [];
+      while (left.length) {
+        const g = [left.shift()];
+        for (let i = 0; i < g.length; i++) {
+          for (let j = left.length - 1; j >= 0; j--) if (this.overlaps(s, g[i], left[j])) g.push(left.splice(j, 1)[0]);
+        }
+        groups.push(s.caps.filter(c => g.indexOf(c.id) >= 0).map(c => c.id));
+      }
+      s.groups = groups; s.pool = []; s.step = 'advanced';
+    });
+  }
+  unassign(id) {
+    this.mut(s => {
+      s.groups = s.groups.map(g => g.filter(x => x !== id)).filter(g => g.length);
+      s.pool.push(id);
+    });
+  }
+  assign(id, to) {
+    if (to === '') return;
+    this.mut(s => {
+      s.pool = s.pool.filter(x => x !== id);
+      if (to === 'new') s.groups.push([id]); else s.groups[+to].push(id);
+    });
+  }
+  backToSelect() { this.setState({ step: 'select' }); }
+  runAdvanced() {
+    const n = this.state.groups.length;
+    this.run();
+    this.say('Advanced recommender started for ' + n + (n > 1 ? ' groups' : ' group') + '. You can keep annotating while it runs.');
+  }
   selectable(s, c) { const g = this.group(s, c); return g === 'ready' || g === 'outdated'; }
   run() {
-    const ids = Object.keys(this.state.sel).filter(k => this.state.sel[k]);
+    const ids = this.selIds(this.state);
     if (!ids.length) return;
     this.mut(s => {
       s.caps.forEach(c => { if (ids.indexOf(c.id) >= 0) c.rec = { state: 'running', dirty: null, folders: s.folders.filter(f => f.cap === c.id).map(f => f.id) }; });
-      s.modal = false; s.banner = false;
+      s.modal = false; s.banner = false; s.step = 'select';
     });
     this.say('Recommender started for ' + ids.length + (ids.length > 1 ? ' captures' : ' capture') + '. You can keep annotating while it runs.');
     const secs = this.props.runSeconds ?? 8;
@@ -918,6 +1008,29 @@ class Component extends DCLogic {
     v.runDisabled = selN === 0;
     v.runStyle = selN ? 'background:#FF4A00; color:#FFFFFF; cursor:pointer;' : 'background:#E4E4E7; color:#A1A1AA; cursor:not-allowed;';
     v.run = () => this.run(); v.closeModal = () => this.closeModal();
+    v.modalTitle = s.step === 'advanced' ? 'Advanced Mode' : 'Run Data Recommender';
+    v.modalSub = s.step === 'advanced' ? 'Captures in a group are combined into one recommendation.' : 'Runs per capture and takes a few minutes. You can keep annotating while it runs.';
+    v.isSelect = s.step === 'select'; v.isAdvanced = s.step === 'advanced';
+    v.showAdvanced = selN > 1 && this.hasOverlap(s);
+    v.setupAdvanced = () => this.setupAdvanced(); v.backToSelect = () => this.backToSelect(); v.runAdvanced = () => this.runAdvanced();
+    const capLine = id => { const c = s.caps.find(x => x.id === id); return { name: c.variant + ' · ' + c.name, chips: this.chips(c.classes) }; };
+    v.advGroups = s.groups.map((g, gi) => {
+      const shared = s.caps.find(c => c.id === g[0]).classes.filter(x => g.every(id => s.caps.find(c => c.id === id).classes.indexOf(x) >= 0));
+      const linked = g.length > 1 && g.every(a => g.some(b => b !== a && this.overlaps(s, a, b)));
+      return {
+        title: 'Group ' + (gi + 1),
+        note: g.length === 1 ? 'Runs on its own' : (linked ? (shared.length ? 'Shared: ' + shared.map(x => this.N[x]).join(', ') : 'Linked by overlapping classes') : 'Some captures share no classes'),
+        noteStyle: g.length > 1 && !linked ? 'color:#B45309;' : 'color:#71717A;',
+        members: g.map(id => Object.assign(capLine(id), { remove: () => this.unassign(id), removeLabel: 'Unassign ' + capLine(id).name }))
+      };
+    });
+    v.hasPool = s.pool.length > 0;
+    v.pool = s.pool.map(id => Object.assign(capLine(id), {
+      options: s.groups.map((g, gi) => ({ value: String(gi), label: 'Group ' + (gi + 1) })).concat([{ value: 'new', label: 'New group' }]),
+      pick: e => this.assign(id, e.target.value), pickLabel: 'Assign ' + capLine(id).name + ' to a group'
+    }));
+    v.allAssigned = s.step === 'advanced' && s.pool.length === 0;
+    v.advText = s.pool.length ? s.pool.length + ' unassigned' : s.groups.length + (s.groups.length > 1 ? ' groups' : ' group') + ' · ' + this.selIds(s).length + ' captures';
 
     // annotation
     const ctx = s.screen === 'annotate' ? this.curCtx(s) : null;
