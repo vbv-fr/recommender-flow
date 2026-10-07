@@ -276,26 +276,31 @@ Run Recommender
 <button class="ibtn" aria-label="Close" onClick="{{closeModal}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
 </div>
 <div style="padding: 10px 20px; background: #FAFAFA; border-bottom: 1px solid #EFEFF1; font-size: 12px; color: #52525B">Rules per capture: each class needs <strong>5</strong> labelled instances. Each absent class needs <strong>3</strong> absent labels, placed within the first 5 images without it. Each negative class needs <strong>5</strong> negative labels, placed within the first 5 images of its folder.</div>
-<div style="padding: 14px 20px; display: flex; flex-direction: column; gap: 16px; max-height: 520px; overflow-y: auto">
-<sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
-<div style="display: flex; flex-direction: column; gap: 8px">
-<div style="display: flex; align-items: baseline; gap: 8px"><h4 style="margin: 0; font-size: 14px; font-weight: 700">{{g.title}}</h4><span style="font-size: 12px; color: #71717A">{{g.count}} · {{g.desc}}</span></div>
-<sc-for list="{{g.rows}}" as="r" hint-placeholder-count="1">
-<div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid #EAEAEC; border-radius: 10px; {{r.cardStyle}}">
-<sc-if value="{{r.selectable}}" hint-placeholder-val="{{true}}"><input type="checkbox" id="{{r.cid}}" checked="{{r.checked}}" onChange="{{r.toggle}}" style="width: 18px; height: 18px; accent-color: #FF4A00; margin: 2px 0 0; flex: none"></sc-if>
-<sc-if value="{{r.icRun}}" hint-placeholder-val="{{false}}"><span style="width: 18px; display: inline-flex; justify-content: center; margin-top: 3px; flex: none"><span class="spin"></span></span></sc-if>
-<sc-if value="{{r.icOk}}" hint-placeholder-val="{{false}}"><span style="width: 18px; display: inline-flex; justify-content: center; margin-top: 2px; flex: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E8E4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></span></sc-if>
-<sc-if value="{{r.icNo}}" hint-placeholder-val="{{false}}"><span style="width: 18px; display: inline-flex; justify-content: center; margin-top: 2px; flex: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg></span></sc-if>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
-<label for="{{r.cid}}" style="font-weight: 700; font-size: 14px">{{r.name}}</label>
-<span style="font-size: 12px; color: #52525B">{{r.meta}}</span>
+<div style="padding: 14px 20px; max-height: 520px; overflow-y: auto">
+<div role="table" aria-label="Captures" style="border: 1px solid #EAEAEC; border-radius: 10px; overflow: hidden">
+<div role="row" style="display: grid; grid-template-columns: 48px minmax(140px, 1fr) minmax(200px, 1.6fr); background: #FF4A00; color: #FFFFFF; font-size: 13px; font-weight: 700">
+<div role="columnheader" style="padding: 10px 0; display: flex; justify-content: center; align-items: center"><input type="checkbox" aria-label="Select all ready captures" checked="{{allChecked}}" disabled="{{noneSelectable}}" onChange="{{toggleAll}}" style="width: 17px; height: 17px; accent-color: #18181B; margin: 0"></div>
+<div role="columnheader" style="padding: 10px 12px">Capture</div>
+<div role="columnheader" style="padding: 10px 12px">Status</div>
+</div>
+<sc-for list="{{capRows}}" as="r" hint-placeholder-count="4">
+<div role="row" style="display: grid; grid-template-columns: 48px minmax(140px, 1fr) minmax(200px, 1.6fr); border-top: 1px solid #EFEFF1; font-size: 13px; {{r.rowStyle}}">
+<div role="cell" style="padding: 12px 0; display: flex; justify-content: center; align-items: flex-start"><input type="checkbox" id="{{r.cid}}" aria-label="{{r.selLabel}}" checked="{{r.checked}}" disabled="{{r.locked}}" onChange="{{r.toggle}}" style="width: 17px; height: 17px; accent-color: #FF4A00; margin: 1px 0 0; {{r.boxStyle}}"></div>
+<div role="cell" style="padding: 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<label for="{{r.cid}}" style="font-weight: 700; {{r.nameStyle}}">{{r.name}}</label>
+<span style="font-size: 12px; color: #71717A">{{r.sub}}</span>
+</div>
+<div role="cell" style="padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+<span class="chip" style="{{r.pillStyle}}"><sc-if value="{{r.icRun}}" hint-placeholder-val="{{false}}"><span class="spin" style="margin-right: 6px"></span></sc-if>{{r.status}}</span>
+<sc-if value="{{r.canAnnotate}}" hint-placeholder-val="{{false}}"><button class="link" style="font-size: 13px; white-space: nowrap; margin-left: auto" onClick="{{r.annotate}}">Annotate →</button></sc-if>
+</div>
+<sc-if value="{{r.hasNote}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; color: #52525B">{{r.note}}</span></sc-if>
 <sc-if value="{{r.hasDef}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{r.defs}}" as="d"><span class="chip" style="{{d.style}}">{{d.text}}</span></sc-for></div></sc-if>
 </div>
-<sc-if value="{{r.canAnnotate}}" hint-placeholder-val="{{false}}"><button class="link" style="font-size: 13px; white-space: nowrap" onClick="{{r.annotate}}">Annotate →</button></sc-if>
 </div>
 </sc-for>
 </div>
-</sc-for>
 </div>
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFEFF1">
 <span style="flex: 1; font-size: 13px; color: #52525B">{{selText}}</span>
@@ -591,11 +596,18 @@ class Component extends DCLogic {
   openModal() {
     this.mut(s => {
       s.modal = true; s.sel = {};
-      s.caps.forEach(c => { const g = this.group(s, c); if (g === 'ready' || g === 'outdated') s.sel[c.id] = true; });
     });
   }
   closeModal() { this.setState({ modal: false }); }
   toggleSel(id) { this.mut(s => { s.sel[id] = !s.sel[id]; }); }
+  toggleAll() {
+    this.mut(s => {
+      const ids = s.caps.filter(c => this.selectable(s, c)).map(c => c.id);
+      const all = ids.length && ids.every(id => s.sel[id]);
+      s.sel = {}; if (!all) ids.forEach(id => { s.sel[id] = true; });
+    });
+  }
+  selectable(s, c) { const g = this.group(s, c); return g === 'ready' || g === 'outdated'; }
   run() {
     const ids = Object.keys(this.state.sel).filter(k => this.state.sel[k]);
     if (!ids.length) return;
@@ -824,35 +836,38 @@ class Component extends DCLogic {
     });
     return out;
   }
-  buildGroups(s) {
-    const defs = [
-      ['ready', 'Ready to run', 'all label rules met, not run yet'],
-      ['outdated', 'Outdated', 'something changed since the last run'],
-      ['running', 'Running', 'results fill the Recommended column'],
-      ['notready', 'Not ready', 'more labels needed'],
-      ['uptodate', 'Up to date', 'nothing to re-run']
-    ];
-    const by = {}; defs.forEach(d => { by[d[0]] = []; });
-    s.caps.forEach(c => {
-      const g = this.group(s, c); const r = this.readiness(s, c);
-      const nF = s.folders.filter(f => f.cap === c.id).length;
-      const selectable = g === 'ready' || g === 'outdated';
-      const checked = !!s.sel[c.id];
-      let meta = '';
-      if (g === 'ready') meta = nF + (nF === 1 ? ' folder' : ' folders') + ' · all label rules met';
-      else if (g === 'outdated') meta = c.rec.reason;
-      else if (g === 'running') meta = 'Running in the background' + (c.rec.dirty ? ' · folders changed meanwhile, result will land as outdated' : '');
-      else if (g === 'uptodate') meta = 'Generated ' + c.rec.at + ' · no changes since';
-      else meta = c.rec.state === 'outdated' ? 'Outdated, and more labels are needed before it can re-run' : 'More labels needed before it can run';
-      by[g].push({
-        cid: 'sel-' + c.id, name: c.variant + ' · ' + c.name, meta: meta, selectable: selectable, checked: checked,
-        toggle: () => this.toggleSel(c.id), icRun: g === 'running', icOk: g === 'uptodate', icNo: g === 'notready',
-        hasDef: g === 'notready', defs: r.defs.map(d => ({ text: this.N[d.cls] + this.KIND[d.kind] + ' · ' + d.n + ' more', style: this.chipStyle(d.cls, d.kind !== 'present') })),
-        canAnnotate: g === 'notready' && !!c.live, annotate: () => this.annotateCap(c.id),
-        cardStyle: selectable && checked ? 'border-color:#FFB48F; background:#FFF8F4;' : ''
+  buildCapRows(s) {
+    const order = ['ready', 'outdated', 'notready', 'running', 'uptodate'];
+    const pills = {
+      ready: ['Ready to run', 'background:#E8F6EE; color:#1E7A43;'],
+      outdated: ['Outdated', 'background:#FFF4E5; color:#B45309;'],
+      running: ['Running', 'background:#EEF2FF; color:#3B4CCA;'],
+      notready: ['Missing classes', 'background:#FDECEC; color:#B42318;'],
+      uptodate: ['Up to date', 'background:#F4F4F5; color:#52525B;']
+    };
+    return s.caps.map(c => ({ c: c, g: this.group(s, c) }))
+      .sort((x, y) => order.indexOf(x.g) - order.indexOf(y.g))
+      .map(({ c, g }) => {
+        const r = this.readiness(s, c);
+        const nF = s.folders.filter(f => f.cap === c.id).length;
+        const sel = g === 'ready' || g === 'outdated';
+        const checked = sel && !!s.sel[c.id];
+        let note = '';
+        if (g === 'outdated') note = c.rec.reason;
+        else if (g === 'running' && c.rec.dirty) note = 'Folders changed meanwhile, result will land as outdated';
+        else if (g === 'uptodate') note = 'Generated ' + c.rec.at;
+        else if (g === 'notready' && c.rec.state === 'outdated') note = 'Last result is outdated';
+        return {
+          cid: 'sel-' + c.id, name: c.variant + ' · ' + c.name, sub: nF + (nF === 1 ? ' folder' : ' folders'),
+          selLabel: 'Select ' + c.variant + ' · ' + c.name, checked: checked, locked: !sel, toggle: () => this.toggleSel(c.id),
+          boxStyle: sel ? 'cursor:pointer;' : 'cursor:not-allowed; opacity:.45;', nameStyle: sel ? 'cursor:pointer;' : 'color:#71717A;',
+          rowStyle: checked ? 'background:#FFF8F4;' : '',
+          status: pills[g][0], pillStyle: pills[g][1], icRun: g === 'running',
+          hasNote: !!note, note: note,
+          hasDef: g === 'notready', defs: r.defs.map(d => ({ text: this.N[d.cls] + this.KIND[d.kind] + ' · ' + d.n + ' more', style: this.chipStyle(d.cls, d.kind !== 'present') })),
+          canAnnotate: g === 'notready' && !!c.live, annotate: () => this.annotateCap(c.id)
+        };
       });
-    });
-    return defs.filter(d => by[d[0]].length).map(d => ({ title: d[1], desc: d[2], count: by[d[0]].length, rows: by[d[0]] }));
   }
 
   renderVals() {
@@ -893,10 +908,13 @@ class Component extends DCLogic {
     v.rows = s.screen === 'datasets' ? this.buildRows(s) : [];
 
     // modal
-    v.groups = s.modal ? this.buildGroups(s) : [];
-    const selN = Object.keys(s.sel).filter(k => s.sel[k]).length;
-    v.selText = selN ? selN + (selN > 1 ? ' captures' : ' capture') + ' selected · runs in the background' : 'Select at least one capture';
-    v.runText = 'Run for ' + selN + (selN === 1 ? ' capture' : ' captures');
+    v.capRows = s.modal ? this.buildCapRows(s) : [];
+    const selIds = s.caps.filter(c => this.selectable(s, c)).map(c => c.id);
+    const selN = selIds.filter(id => s.sel[id]).length;
+    v.allChecked = selIds.length > 0 && selN === selIds.length; v.noneSelectable = selIds.length === 0;
+    v.toggleAll = () => this.toggleAll();
+    v.selText = selN ? selN + (selN > 1 ? ' captures' : ' capture') + ' selected' : 'Select at least one capture';
+    v.runText = 'Next';
     v.runDisabled = selN === 0;
     v.runStyle = selN ? 'background:#FF4A00; color:#FFFFFF; cursor:pointer;' : 'background:#E4E4E7; color:#A1A1AA; cursor:not-allowed;';
     v.run = () => this.run(); v.closeModal = () => this.closeModal();
